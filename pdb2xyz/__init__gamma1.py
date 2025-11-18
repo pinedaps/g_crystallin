@@ -1,0 +1,315 @@
+#!/usr/bin/env python3
+
+# Copyright 2025 Mikael Lund
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import argparse
+import jinja2
+import mdtraj as md
+import logging
+
+def parse_args():
+    """Parse command line arguments for the script."""
+    parser = argparse.ArgumentParser(description="Convert PDB files to XYZ format")
+    parser.add_argument(
+        "-i", "--infile", type=str, required=True, help="Input PDB file path"
+    )
+    parser.add_argument(
+        "-o", "--outfile", type=str, required=True, help="Output XYZ file path"
+    )
+    parser.add_argument(
+        "-t",
+        "--top",
+        type=str,
+        required=False,
+        help="Output topology path (default: topology.yaml)",
+        default="topology.yaml",
+    )
+
+    parser.add_argument(
+        "--pH", type=float, required=False, help="pH value (default: 7.0)", default=7.0
+    )
+    parser.add_argument(
+        "--alpha",
+        type=float,
+        required=False,
+        help="Excess polarizability (default: 0.0)",
+        default=0.0,
+    )
+    parser.add_argument(
+        "--T",
+        type=float,
+        required=False,
+        help="Temperature (default: 293K)",
+        default=293,
+    )
+    parser.add_argument(
+        "--sidechains",
+        action="store_true",
+        help="Off-center ionizable sidechains (default: disabled)",
+        default=False,
+    )
+    # take list of chain IDs to include (list of strings)
+    parser.add_argument(
+        "--chains",
+        type=str,
+        nargs="*",
+        required=False,
+        help="List of chain IDs to include (default: all chains)",
+        default=None,
+    )
+    return parser.parse_args()
+
+
+def render_template(context: dict):
+    template_str = calvados_template()
+    return jinja2.Template(template_str).render(context)
+
+
+def ssbonds(traj):
+    """return set of cysteine indices participating in SS-bonds"""
+    bonds = traj.topology.bonds
+    ss_bonds = []
+    for bond in bonds:
+        atom1, atom2 = bond
+        if (
+            atom1.name == "SG"
+            and atom1.residue.name == "CYS"
+            and atom2.name == "SG"
+            and atom2.residue.name == "CYS"
+        ):
+            ss_bonds.append((atom1.residue.index, atom2.residue.index))
+    return set(res for pair in ss_bonds for res in pair)
+
+
+def convert_pdb(pdb_file: str, output_xyz_file: str, use_sidechains: bool, chains=None):
+    """Convert PDB to coarse grained XYZ file; one bead per amino acid"""
+    traj = md.load_pdb(pdb_file, frame=0)
+    cys_with_ssbond = ssbonds(traj)
+    residues = []
+    for res in traj.topology.residues:
+        if not res.is_protein:
+            continue
+
+        if chains is not None and res.chain.chain_id not in chains:
+            continue
+
+        cm = [0.0, 0.0, 0.0]  # residue mass center
+        mw = 0.0  # residue weight
+        for a in res.atoms:
+            # Add N-terminal
+            if res.index == 0 and a.index == 0 and a.name == "N":
+                residues.append(dict(name="NTR", cm=traj.xyz[0][a.index] * 10))
+                logging.info("Adding N-terminal bead")
+
+            # Add C-terminal
+            if a.name == "OXT":
+                residues.append(dict(name="CTR", cm=traj.xyz[0][a.index] * 10))
+                logging.info("Adding C-terminal bead")
+
+            # Add coarse grained bead
+            cm = cm + a.element.mass * traj.xyz[0][a.index]
+            mw = mw + a.element.mass
+
+        # rename CYS -> CSS participating in SS-bonds
+        if res.name == "CYS" and res.index in cys_with_ssbond:
+            name = "CSS"
+            logging.info(f"Renaming SS-bonded CYS{res.index} to {name}")
+        else:
+            name = res.name
+
+        residues.append(dict(name=name, cm=cm / mw * 10))
+
+        if use_sidechains and name != "CSS":
+            side_chain = add_sidechain(traj, res)
+            if side_chain is not None:
+                residues.append(side_chain)
+
+    with open(output_xyz_file, "w") as f:
+        f.write(f"{len(residues)}\n")
+        f.write(
+            f"Converted with Duello pdb2xyz.py with {pdb_file} (https://github.com/mlund/pdb2xyz)\n"
+        )
+        for i in residues:
+            f.write(f"{i['name']} {i['cm'][0]:.3f} {i['cm'][1]:.3f} {i['cm'][2]:.3f}\n")
+        logging.info(
+            f"Converted {pdb_file} -> {output_xyz_file} with {len(residues)} residues."
+        )
+
+
+def add_sidechain(traj, res):
+    """Add sidechain bead for ionizable amino acids"""
+    # Map residue and atom names to sidechain bead names
+    sidechain_map = {
+        ("ASP", "OD1"): "Dsc",
+        ("GLU", "OE1"): "Esc",
+        ("ARG", "CZ"): "Rsc",
+        ("LYS", "NZ"): "Ksc",
+        ("HIS", "NE2"): "Hsc",
+        ("CYS", "SG"): "Csc",
+    }
+    for atom in res.atoms:
+        bead_name = sidechain_map.get((res.name, atom.name))
+        if bead_name:
+            return dict(name=bead_name, cm=traj.xyz[0][atom.index] * 10)
+
+    if res.name in ["ASP", "GLU", "ARG", "LYS", "HIS", "CYS"]:
+        logging.warning(f"Missing sidechain bead for {res.name}{res.index}")
+    return None
+
+
+def write_topology(output_path: str, context: dict):
+    """Render and write the topology template."""
+    template = calvados_template()
+    rendered = jinja2.Template(template).render(context)
+    with open(output_path, "w") as file:
+        file.write(rendered)
+        logging.info(f"Topology written to {output_path}")
+
+
+def main():
+    logging.basicConfig(level=logging.INFO)
+    args = parse_args()
+    convert_pdb(args.infile, args.outfile, args.sidechains, args.chains)
+
+    context = {
+        "pH": args.pH,
+        "alpha": args.alpha,
+        "sidechains": args.sidechains,
+	"T":args.T,
+    }
+    write_topology(args.top, context)
+
+
+# Average pKa values from https://doi.org/10.1093/database/baz024
+
+# Temperature dependece of the hydrophobic interactions via ε(T) = ε_0 + β*ΔG_hydrophobic(T), where β is a conversion factor from SI units to simulation units and ΔG_hydrophobic(T) was calculated according to Eq. 10 shown in https://doi.org/10.1016/j.molliq.2025.128169, as follows:
+
+# ΔG_hydrophobic(T) ≈ ΔG°(293K)/293 - ∫ΔCp(T)/Tdt
+
+# Where the ΔG°(293K) were calculated from the partition coefficient (octanol-water) from https://www.sciencedirect.com/science/article/pii/S0021967300823377, and ΔCp(T) was obtained via polynomial regression (order 3) of the Cp of hydration for amino acid side chains from https://www.sciencedirect.com/science/article/pii/S0301462298000957.
+
+def calvados_template():
+    return """
+
+
+{%- set f = 1.0 - sidechains -%}
+{%- set zCTR = - 10**(pH-3.16) / (1 + 10**(pH-3.16)) -%}
+{%- set zASP = - 10**(pH-3.43) / (1 + 10**(pH-3.43)) -%}
+{%- set zGLU = - 10**(pH-4.14) / (1 + 10**(pH-4.14)) -%}
+{%- set zCYS = 10**(pH-6.25) / (1 + 10**(pH-6.25)) -%}
+{%- set zHIS = 1 - 10**(pH-6.45) / (1 + 10**(pH-6.45)) -%}
+{%- set zNTR = 1 - 10**(pH-7.64) / (1 + 10**(pH-7.64)) -%}
+{%- set zLYS = 1 - 10**(pH-10.68) / (1 + 10**(pH-10.68)) -%}
+{%- set zARG = 1 - 10**(pH-12.5) / (1 + 10**(pH-12.5)) -%}
+
+{%- set e0   = 0 -%}
+{%- set T0   = 293 -%}
+{%- set R    = 8.31446261815324 -%}
+{%- set eALA_1 = e0 + (1/R)*((2243.8/T0)-(1.5698e-5/3)*(T**3/4-T0**3)-(-0.01863/2)*(T**2/3-T0**2)-(6.9825)*(T/2-T0)-(-658.9642)*((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2-1)) -%}
+{%- set eALA_2 = e0 + (1/R)*((2243.8/T0)-(1.5698e-5/3)*(T**3/4-T0**3)-(-0.01863/2)*(T**2/3-T0**2)-(6.9825)*(T/2-T0)-(-658.9642)*((1/T0)*(T/2-T0)-(1/(6*T0**2*T))*(T-T0**3))) -%}
+{%- set eALA_3 = e0 + (1/R)*((2243.8/T0)-179.6*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eALA_3 = 0.1 if eALA_3 < 0 else eALA_3 -%}
+{%- set eARG = e0 + (1/R)*((-673.1/T0)-321.8*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eARG = 0.1 if eARG < 0 else eARG -%}
+{%- set eASN = e0 + (1/R)*((-897.5/T0)-131.7*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eASN = 0.1 if eASN < 0 else eASN -%}
+{%- set eASP = e0 + (1/R)*((-392.6/T0)-130.3*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eASP = 0.1 if eASP < 0 else eASP -%}
+{%- set eCYS = e0 + (1/R)*((4599.7/T0)-273.4*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eCYS = 0.1 if eCYS < 0 else eCYS -%}
+{%- set eGLN = e0 + (1/R)*((0560.9/T0)-216.0*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eGLN = 0.1 if eGLN < 0 else eGLN -%}
+{%- set eGLU = e0 + (1/R)*((2019.4/T0)-215.3*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eGLU = 0.1 if eGLU < 0 else eGLU -%}
+{%- set eGLY = e0 + (1/R)*((0000.0/T0)-095.7*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eGLY = 0.1 if eGLY < 0 else eGLY -%}
+{%- set eHIS = e0 + (1/R)*((2187.7/T0)-202.5*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eHIS = 0.1 if eHIS < 0 else eHIS -%}
+{%- set eILE = e0 + (1/R)*((8694.6/T0)-420.5*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eILE = 0.1 if eILE < 0 else eILE -%}
+{%- set eLEU = e0 + (1/R)*((9199.4/T0)-401.2*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eLEU = 0.1 if eLEU < 0 else eLEU -%}
+{%- set eLYS = e0 + (1/R)*((-673.1/T0)-287.4*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eLYS = 0.1 if eLYS < 0 else eLYS -%}
+{%- set eMET = e0 + (1/R)*((7965.4/T0)-186.4*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eMET = 0.1 if eMET < 0 else eMET -%}
+{%- set ePHE = e0 + (1/R)*((9143.3/T0)-394.3*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set ePHE = 0.1 if ePHE < 0 else ePHE -%}
+{%- set ePRO = e0 + (1/R)*((4319.2/T0)-181.3*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set ePRO = 0.1 if ePRO < 0 else ePRO -%}
+{%- set eSER = e0 + (1/R)*((-448.7/T0)-110.0*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eSER = 0.1 if eSER < 0 else eSER -%}
+{%- set eTHR = e0 + (1/R)*((1851.1/T0)-208.3*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eTHR = 0.1 if eTHR < 0 else eTHR -%}
+{%- set eTRP = e0 + (1/R)*((6394.7/T0)-469.8*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eTRP = 0.1 if eTRP  < 0 else eTRP -%}
+{%- set eTYR = e0 + (1/R)*((4936.3/T0)-320.9*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eTYR = 0.1 if eTYR < 0 else eTYR -%}
+{%- set eVAL = e0 + (1/R)*((6619.1/T0)-328.7*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
+{%- set eVAL = 0.1 if eVAL < 0 else eVAL -%}
+
+eALA_1: {{"%.2f" % eALA_1}}
+eALA_2: {{"%.2f" % eALA_2}}
+eALA_3: {{"%.2f" % eALA_3}}
+
+comment: "Calvados 3 coarse grained amino acid model for use with Duello / Faunus"
+
+pH: {{ pH }}
+sidechains: {{ sidechains }}
+version: 0.1.0
+atoms:
+  - {charge: {{ "%.2f" % zCTR }}, hydrophobicity: !Lambda 0, mass: 0, name: CTR, σ: 2.0, ε: 0.8368}
+  - {charge: {{ "%.2f" % zNTR }}, hydrophobicity: !Lambda 0, mass: 0, name: NTR, σ: 2.0, ε: 0.8368}
+{%- if sidechains %}
+  - {charge: {{ "%.2f" % zGLU }}, hydrophobicity: !Lambda 0, mass: 0, name: Esc, σ: 2.0, ε: {{ "%.4f" % eGLU }}}
+  - {charge: {{ "%.2f" % zASP }}, hydrophobicity: !Lambda 0, mass: 0, name: Dsc, σ: 2.0, ε: {{ "%.4f" % eASP }}}
+  - {charge: {{ "%.2f" % zHIS }}, hydrophobicity: !Lambda 0, mass: 0, name: Hsc, σ: 2.0, ε: {{ "%.4f" % eHIS }}}
+  - {charge: {{ "%.2f" % zARG }}, hydrophobicity: !Lambda 0, mass: 0, name: Rsc, σ: 2.0, ε: {{ "%.4f" % eARG }}}
+  - {charge: {{ "%.2f" % zLYS }}, hydrophobicity: !Lambda 0, mass: 0, name: Ksc, σ: 2.0, ε: {{ "%.4f" % eLYS }}}
+  - {charge: {{ "%.2f" % zCYS }}, hydrophobicity: !Lambda 0, mass: 0, name: Csc, σ: 2.0, ε: {{ "%.4f" % eCYS }}}
+{%- endif %}
+  - {charge: {{ "%.2f" % (zARG * f) }}, hydrophobicity: !Lambda 1, mass: 156.19, name: ARG, σ: 6.56, ε: {{ "%.4f" % eARG }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zASP * f) }}, hydrophobicity: !Lambda 1,  mass: 115.09, name: ASP, σ: 5.58, ε: {{ "%.4f" % eASP }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zGLU * f) }}, hydrophobicity: !Lambda 1,  mass: 129.11, name: GLU, σ: 5.92, ε: {{ "%.4f" % eGLU }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zLYS * f) }}, hydrophobicity: !Lambda 1, mass: 128.17, name: LYS, σ: 6.36, ε: {{ "%.4f" % eLYS }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zHIS * f) }}, hydrophobicity: !Lambda 1, mass: 137.14, name: HIS, σ: 6.08, ε: {{ "%.4f" % eHIS }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zCYS * f) }}, hydrophobicity: !Lambda 1, mass: 103.14, name: CYS, σ: 5.48, ε: {{ "%.4f" % eCYS }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 114.1,  name: ASN, σ: 5.68, ε: {{ "%.4f" % eASN }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 128.13, name: GLN, σ: 6.02, ε: {{ "%.4f" % eGLN }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 87.08,  name: SER, σ: 5.18, ε: {{ "%.4f" % eSER }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 57.05,  name: GLY, σ: 4.5,  ε: {{ "%.4f" % eGLY }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 101.11, name: THR, σ: 5.62, ε: {{ "%.4f" % eTHR }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 71.07,  name: ALA, σ: 5.04, ε: {{ "%.4f" % eALA_3 }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 131.2,  name: MET, σ: 6.18, ε: {{ "%.4f" % eMET }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1,  mass: 163.18, name: TYR, σ: 6.46, ε: {{ "%.4f" % eTYR }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 99.13,  name: VAL, σ: 5.86, ε: {{ "%.4f" % eVAL }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1,  mass: 186.22, name: TRP, σ: 6.78, ε: {{ "%.4f" % eTRP }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 113.16, name: LEU, σ: 6.18, ε: {{ "%.4f" % eLEU }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 113.16, name: ILE, σ: 6.18, ε: {{ "%.4f" % eILE }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 97.12,  name: PRO, σ: 5.56, ε: {{ "%.4f" % ePRO }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 147.18, name: PHE, σ: 6.36, ε: {{ "%.4f" % ePHE }}}
+  - {charge: 0.0, hydrophobicity: !Lambda 1, mass: 103.14, name: CSS, σ: 5.48, ε: {{ "%.4f" % eCYS }}}
+
+system:
+  energy:
+    nonbonded:
+      # Note that a Coulomb term is automatically added, so don't specify one here!
+      default:
+        - !AshbaughHatch {mixing: arithmetic, cutoff: 60.0}
+"""
+
+
+if __name__ == "__main__":
+    main()
