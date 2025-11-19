@@ -32,4 +32,4 @@ system:
     nonbonded:
       # Note that a Coulomb term is automatically added, so don't specify one here!
       default:
-        - !AshbaughHatch {mixing: arithmetic, cutoff: 20.0}
+        - !AshbaughHatch {mixing: arithmetic, cutoff: 80.0}
