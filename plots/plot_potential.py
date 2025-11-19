@@ -21,18 +21,19 @@ data_dir = args.path
 
 # Create the list of files
 
-files = np.array( [name for name in os.listdir(data_dir) if os.path.isfile(os.path.join(data_dir, name))])
+files = sorted(np.array( [name for name in os.listdir(data_dir) if os.path.isfile(os.path.join(data_dir, name))]), reverse=True)
 
-# Create the list of colors to facilitate comparison 
+# Create the list of colors and fillstyles to facilitate comparison 
 
-colors = ['b']*len(files) 
+colors  = ['black','black','black','blue','green','red','green','red','red','red','red','orange','purple', 'purple'] 
+markers = ['^',    '*',    'o',    'o',   'o',    'o',  '*',    '*',  'v',  's',  '>',  'o',     '*'    , 'o']
 
 fig, ax1 = plt.subplots(nrows=1)
 
 for index,file in enumerate(files):
 	print('Procesing file: ', file )
 	R, F, U, C, exp = np.loadtxt(data_dir+file, unpack=True)
-	ax1.plot(R, U, ms=3, marker="o", fillstyle='none', lw=1, color=colors[index], label=file.replace('pmf_','').replace('.dat',''))
+	ax1.plot(R, U, ms=5, marker=markers[index], fillstyle='none', lw=1, color=colors[index], label=file.replace('pmf_','').replace('.dat',''))
 	
 plt.ylim(-50,50)
 plt.xlim(23,60)
