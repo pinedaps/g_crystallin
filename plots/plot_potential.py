@@ -61,8 +61,8 @@ for index, file_pot in enumerate(files_pot):
 		ax.plot(R, U, ms=5, marker=markers[index], lw=1, color=colors[index], label=file_pot.replace('pmf_','').replace('.dat',''))
 plt.ylim(-11,5)
 plt.xlim(23,60)
-plt.xlabel(r"Distance,  r [$\AA$]")
-plt.ylabel(r"Potential,  U [$k_BT$]")
+plt.xlabel(r"Distance, r [$\AA$]")
+plt.ylabel(r"Potential, U(r) [$k_BT$]")
 plt.legend(ncol=1, title='T [K]')
 plt.savefig(plot_dir+"potential.png")
 
