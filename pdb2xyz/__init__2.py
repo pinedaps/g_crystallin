@@ -194,11 +194,17 @@ def main():
 
 # Average pKa values from https://doi.org/10.1093/database/baz024
 
-# Temperature dependece of the hydrophobic interactions via ε(T) = ε_0 + β*ΔG_hydrophobic(T), where β is a conversion factor from SI units to simulation units and ΔG_hydrophobic(T) was calculated according to Eq. 10 shown in https://doi.org/10.1016/j.molliq.2025.128169, as follows:
+# Temperature dependece of the hydrophobic interactions via ε(T) = ε_c + ΔG_hydrophobic(T), using as template Eq.15 described in H. Wennerstrom & B. Lindman (https://doi.org/10.1016/j.molliq.2025.128169), as follows:
 
-# ΔG_hydrophobic(T) ≈ ΔG°(293K)/293 - ∫ΔCp(T)/Tdt
+# ε(T) = ε_c * (T * (1/Tc + c - c*np.log(T/Tc)) - c*Tc)
 
-# Where the ΔG°(293K) were calculated from the partition coefficient (octanol-water) from https://www.sciencedirect.com/science/article/pii/S0021967300823377, and ΔCp(T) was obtained via polynomial regression (order 3) of the Cp of hydration for amino acid side chains from https://www.sciencedirect.com/science/article/pii/S0301462298000957.
+# because jinja2 does not support log we can use the Series expansion of the exact solution around Tc, up to the second order
+
+# ε(T) = (ε_c / Tc) * (T - (c / 2) * (T - Tc)**2) 
+
+# The reference value for the minimum depth of the potential, ε_c = 0.8368 at Tc = 293.0 K  was taken from G. Tesei & K. Lindorff-Larsen (https://doi.org/10.12688/openreseurope.14967.2). 
+# For alkanes, c = ΔG/ΔCp ≈ 1.9e-2 K-1 (Eq. 12 in H. Wennerstrom & B. Lindman, https://doi.org/10.1016/j.molliq.2025.128169).
+# For amino acid side chains, c ≈ 2.52e-2 K-1 based on the thermodynamic properties reported in G. I. Makhatadze (https://doi.org/10.1016/S0301-4622(98)00095-7) and V. Pliška, et al. (https://doi.org/10.1016/S0021-9673(00)82337-7).
 
 def calvados_template():
     return """
@@ -216,7 +222,8 @@ def calvados_template():
 
 {%- set ec = 0.8368 -%}
 {%- set Tc = 293 -%}
-{%- set eT = ec/Tc * (T - 0.02522*(T-Tc)**2) -%} 
+{%- set c  = 2.52e-2 -%}
+{%- set eT = (ec / Tc) * (T - (c / 2) * (T - Tc)**2) -%} 
 {%- set eT = 0.1*ec if eT < 0 else eT -%}
 
 comment: "Calvados 3 coarse grained amino acid model for use with Duello / Faunus"
