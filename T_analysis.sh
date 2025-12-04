@@ -167,8 +167,8 @@ for T in "${T_ARRAY[@]}"; do
     duello scan --mol1 "$XYZ_OUT" \
                 --mol2 "$XYZ_OUT" \
                 --rmin 20 \
-                --rmax 80 \
-                --dr 0.5 \
+                --rmax 40 \
+                --dr 1 \
 		--resolution 0.7 \
 		--cutoff 80  \
                 --top "$TOPO_IN"  \
@@ -180,17 +180,13 @@ done
 echo "Duello scans complete."
 echo
 
-exit
-
 #######################################
 # Step 3: Plot results
 #######################################
+
 echo "=== Plotting results ==="
 
-# Replace with your actual plotting script:
-python3 plot_duello_results.py \
-    --input_dir "$SCAN_DIR" \
-    --output_dir "$PLOT_DIR"
+python3 plots/plot_potential.py "${SCAN_DIR}/"
 
 echo "Plots generated in: $PLOT_DIR"
 echo
