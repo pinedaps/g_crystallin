@@ -167,8 +167,8 @@ for T in "${T_ARRAY[@]}"; do
     duello scan --mol1 "$XYZ_OUT" \
                 --mol2 "$XYZ_OUT" \
                 --rmin 20 \
-                --rmax 40 \
-                --dr 1 \
+                --rmax 80 \
+                --dr 0.5 \
 		--resolution 0.7 \
 		--cutoff 80  \
                 --top "$TOPO_IN"  \
