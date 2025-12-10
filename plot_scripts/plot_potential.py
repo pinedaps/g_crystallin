@@ -22,6 +22,7 @@ args = parser.parse_args()
 
 data_dir = args.path
 plot_dir = args.path.replace('scans','plots')
+exp_dir  = args.path.replace('scans','experiments')
 
 # Calculation of the B2 for a hard sphere of radius 'sigma'
 
@@ -44,6 +45,17 @@ for name in sorted(os.listdir(data_dir),reverse=True):
 print('Files to be processed:')
 print(files_pot)
 
+# Extract B2 values from filename and create the list of files
+
+b2 = []
+for index, file_b2 in enumerate(files_b2):
+        with open(data_dir+file_b2, 'r') as file:
+                b2.append(json.load(file)['B2']/B2_HS)
+
+# Extract B2_reduced from experimental data
+
+T_exp, b2_red_exp, b2_min, b2_max = np.loadtxt(exp_dir+os.listdir(exp_dir)[0], unpack=True)
+
 fig, ax = plt.subplots(nrows=1)
 
 for index, file_pot in enumerate(files_pot):
@@ -60,11 +72,10 @@ plt.savefig(plot_dir+"potential.png")
 
 fig, ax = plt.subplots(nrows=1)
 
-b2 = []
-for index, file_b2 in enumerate(files_b2):
-	print('Procesing file: ', file_b2 )
-	with open(data_dir+file_b2, 'r') as file:
-		b2.append(json.load(file)['B2']/B2_HS)
+fig, ax = plt.subplots()
+
+yerr = np.vstack([b2_min, b2_max])
+ax.errorbar(T_exp, b2_red_exp, yerr=yerr, fmt='o', ms=5, lw=1, capsize=3)
 ax.plot(T, b2, ms=5, marker='o', lw=1)
 #plt.ylim(-11,5)
 #plt.xlim(23,60)
