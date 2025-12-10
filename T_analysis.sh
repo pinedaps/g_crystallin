@@ -166,11 +166,11 @@ for T in "${T_ARRAY[@]}"; do
     
     duello scan --mol1 "$XYZ_OUT" \
                 --mol2 "$XYZ_OUT" \
-                --rmin 20 \
+                --rmin 23 \
                 --rmax 80 \
                 --dr 0.5 \
 		--resolution 0.7 \
-		--cutoff 80  \
+		--cutoff 1000  \
                 --top "$TOPO_IN"  \
 		--molarity 0.115  \
 		--temperature "$T" \
@@ -186,7 +186,7 @@ echo
 
 echo "=== Plotting results ==="
 
-python3 plots/plot_potential.py "${SCAN_DIR}/"
+python3 plot_scripts/plot_potential.py "${SCAN_DIR}/"
 
 echo "Plots generated in: $PLOT_DIR"
 echo
