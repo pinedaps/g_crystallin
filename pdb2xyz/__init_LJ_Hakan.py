@@ -194,11 +194,17 @@ def main():
 
 # Average pKa values from https://doi.org/10.1093/database/baz024
 
-# Temperature dependece of the hydrophobic interactions via ε(T) = ε_0 + β*ΔG_hydrophobic(T), where β is a conversion factor from SI units to simulation units and ΔG_hydrophobic(T) was calculated according to Eq. 10 shown in https://doi.org/10.1016/j.molliq.2025.128169, as follows:
+# Temperature dependece of the hydrophobic interactions via ε(T) = ε_c + ΔG_hydrophobic(T), using as template Eq.15 described in H. Wennerstrom & B. Lindman (https://doi.org/10.1016/j.molliq.2025.128169), as follows:
 
-# ΔG_hydrophobic(T) ≈ ΔG°(293K)/293 - ∫ΔCp(T)/Tdt
+# ε(T) = ε_c * (T * (1/Tc + c - c*np.log(T/Tc)) - c*Tc)
 
-# Where the ΔG°(293K) were calculated from the partition coefficient (octanol-water) from https://www.sciencedirect.com/science/article/pii/S0021967300823377, and ΔCp(T) was obtained via polynomial regression (order 3) of the Cp of hydration for amino acid side chains from https://www.sciencedirect.com/science/article/pii/S0301462298000957.
+# because jinja2 does not support log we can use the Series expansion of the exact solution around Tc, up to the second order
+
+# ε(T) = (ε_c / Tc) * (T - (c / 2) * (T - Tc)**2) 
+
+# The reference value for the minimum depth of the potential, ε_c = 0.8368 at Tc = 293.0 K  was taken from G. Tesei & K. Lindorff-Larsen (https://doi.org/10.12688/openreseurope.14967.2). 
+# For alkanes, c = ΔG/ΔCp ≈ 1.9e-2 K-1 (Eq. 12 in H. Wennerstrom & B. Lindman, https://doi.org/10.1016/j.molliq.2025.128169).
+# For amino acid side chains, c ≈ 2.52e-2 K-1 based on the thermodynamic properties reported in G. I. Makhatadze (https://doi.org/10.1016/S0301-4622(98)00095-7) and V. Pliška, et al. (https://doi.org/10.1016/S0021-9673(00)82337-7).
 
 def calvados_template():
     return """
@@ -214,92 +220,50 @@ def calvados_template():
 {%- set zLYS = 1 - 10**(pH-10.68) / (1 + 10**(pH-10.68)) -%}
 {%- set zARG = 1 - 10**(pH-12.5) / (1 + 10**(pH-12.5)) -%}
 
-{%- set e0   = 0.8368 -%}
-{%- set T0   = 293 -%}
-{%- set eALA_1 = e0 + (T/1000)*((2243.8/T0)-(1.5698e-5/3)*(T**3/4-T0**3)-(-0.01863/2)*(T**2/3-T0**2)-(6.9825)*(T/2-T0)-(-658.9642)*((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2-1)) -%}
-{%- set eALA_2 = e0 + (T/1000)*((2243.8/T0)-(1.5698e-5/3)*(T**3/4-T0**3)-(-0.01863/2)*(T**2/3-T0**2)-(6.9825)*(T/2-T0)-(-658.9642)*((1/T0)*(T/2-T0)-(1/(6*T0**2*T))*(T-T0**3))) -%}
-{%- set eALA_3 = e0 + (T/1000)*((2243.8/T0)-179.6*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eALA_3 = 0.1 if eALA_3 < 0 else eALA_3 -%}
-{%- set eARG = e0 + (T/1000)*((-673.1/T0)-321.8*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eARG = 0.1 if eARG < 0 else eARG -%}
-{%- set eASN = e0 + (T/1000)*((-897.5/T0)-131.7*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eASN = 0.1 if eASN < 0 else eASN -%}
-{%- set eASP = e0 + (T/1000)*((-392.6/T0)-130.3*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eASP = 0.1 if eASP < 0 else eASP -%}
-{%- set eCYS = e0 + (T/1000)*((4599.7/T0)-273.4*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eCYS = 0.1 if eCYS < 0 else eCYS -%}
-{%- set eGLN = e0 + (T/1000)*((0560.9/T0)-216.0*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eGLN = 0.1 if eGLN < 0 else eGLN -%}
-{%- set eGLU = e0 + (T/1000)*((2019.4/T0)-215.3*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eGLU = 0.1 if eGLU < 0 else eGLU -%}
-{%- set eGLY = e0 + (T/1000)*((0000.0/T0)-095.7*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eGLY = 0.1 if eGLY < 0 else eGLY -%}
-{%- set eHIS = e0 + (T/1000)*((2187.7/T0)-202.5*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eHIS = 0.1 if eHIS < 0 else eHIS -%}
-{%- set eILE = e0 + (T/1000)*((8694.6/T0)-420.5*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eILE = 0.1 if eILE < 0 else eILE -%}
-{%- set eLEU = e0 + (T/1000)*((9199.4/T0)-401.2*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eLEU = 0.1 if eLEU < 0 else eLEU -%}
-{%- set eLYS = e0 + (T/1000)*((-673.1/T0)-287.4*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eLYS = 0.1 if eLYS < 0 else eLYS -%}
-{%- set eMET = e0 + (T/1000)*((7965.4/T0)-186.4*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eMET = 0.1 if eMET < 0 else eMET -%}
-{%- set ePHE = e0 + (T/1000)*((9143.3/T0)-394.3*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set ePHE = 0.1 if ePHE < 0 else ePHE -%}
-{%- set ePRO = e0 + (T/1000)*((4319.2/T0)-181.3*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set ePRO = 0.1 if ePRO < 0 else ePRO -%}
-{%- set eSER = e0 + (T/1000)*((-448.7/T0)-110.0*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eSER = 0.1 if eSER < 0 else eSER -%}
-{%- set eTHR = e0 + (T/1000)*((1851.1/T0)-208.3*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eTHR = 0.1 if eTHR < 0 else eTHR -%}
-{%- set eTRP = e0 + (T/1000)*((6394.7/T0)-469.8*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eTRP = 0.1 if eTRP  < 0 else eTRP -%}
-{%- set eTYR = e0 + (T/1000)*((4936.3/T0)-320.9*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eTYR = 0.1 if eTYR < 0 else eTYR -%}
-{%- set eVAL = e0 + (T/1000)*((6619.1/T0)-328.7*(((1/T0)*(T-T0)-(1/(2*T0**2))*(T-T0)**2)-1/T)) -%}
-{%- set eVAL = 0.1 if eVAL < 0 else eVAL -%}
-
-eALA_1: {{"%.2f" % eALA_1}}
-eALA_2: {{"%.2f" % eALA_2}}
-eALA_3: {{"%.2f" % eALA_3}}
+{%- set ec = 0.8368 -%}
+{%- set Tc = 293 -%}
+{%- set c  = 2.52e-2 -%}
+{%- set eT = (ec / Tc) * (T - (c / 2) * (T - Tc)**2) -%} 
+{%- set eT = 0.1*ec if eT < 0 else eT -%}
 
 comment: "Calvados 3 coarse grained amino acid model for use with Duello / Faunus"
 
 pH: {{ pH }}
+T:  {{ T }}
 sidechains: {{ sidechains }}
 version: 0.1.0
 atoms:
-  - {charge: {{ "%.2f" % zCTR }}, mass: 0, name: CTR, σ: 2.0, ε: {{e0}}}
-  - {charge: {{ "%.2f" % zNTR }}, mass: 0, name: NTR, σ: 2.0, ε: {{e0}}}
+  - {charge: {{ "%.2f" % zCTR }}, mass: 0, name: CTR, σ: 2.0, ε: {{ "%.4f" % ec }}}
+  - {charge: {{ "%.2f" % zNTR }}, mass: 0, name: NTR, σ: 2.0, ε: {{ "%.4f" % ec }}}
 {%- if sidechains %}
-  - {charge: {{ "%.2f" % zGLU }}, mass: 0, name: Esc, σ: 2.0, ε: {{ "%.4f" % eGLU }}}
-  - {charge: {{ "%.2f" % zASP }}, mass: 0, name: Dsc, σ: 2.0, ε: {{ "%.4f" % eASP }}}
-  - {charge: {{ "%.2f" % zHIS }}, mass: 0, name: Hsc, σ: 2.0, ε: {{ "%.4f" % eHIS }}}
-  - {charge: {{ "%.2f" % zARG }}, mass: 0, name: Rsc, σ: 2.0, ε: {{ "%.4f" % eARG }}}
-  - {charge: {{ "%.2f" % zLYS }}, mass: 0, name: Ksc, σ: 2.0, ε: {{ "%.4f" % eLYS }}}
-  - {charge: {{ "%.2f" % zCYS }}, mass: 0, name: Csc, σ: 2.0, ε: {{ "%.4f" % eCYS }}}
+  - {charge: {{ "%.2f" % zGLU }}, mass: 0, name: Esc, σ: 2.0, ε: {{ "%.4f" % ec }}}
+  - {charge: {{ "%.2f" % zASP }}, mass: 0, name: Dsc, σ: 2.0, ε: {{ "%.4f" % ec }}}
+  - {charge: {{ "%.2f" % zHIS }}, mass: 0, name: Hsc, σ: 2.0, ε: {{ "%.4f" % ec }}}
+  - {charge: {{ "%.2f" % zARG }}, mass: 0, name: Rsc, σ: 2.0, ε: {{ "%.4f" % ec }}}
+  - {charge: {{ "%.2f" % zLYS }}, mass: 0, name: Ksc, σ: 2.0, ε: {{ "%.4f" % ec }}}
+  - {charge: {{ "%.2f" % zCYS }}, mass: 0, name: Csc, σ: 2.0, ε: {{ "%.4f" % ec }}}
 {%- endif %}
-  - {charge: {{ "%.2f" % (zARG * f) }}, mass: 156.19, name: ARG, σ: 6.56, ε: {{ "%.4f" % eARG }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: {{ "%.2f" % (zASP * f) }}, mass: 115.09, name: ASP, σ: 5.58, ε: {{ "%.4f" % eASP }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: {{ "%.2f" % (zGLU * f) }}, mass: 129.11, name: GLU, σ: 5.92, ε: {{ "%.4f" % eGLU }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: {{ "%.2f" % (zLYS * f) }}, mass: 128.17, name: LYS, σ: 6.36, ε: {{ "%.4f" % eLYS }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: {{ "%.2f" % (zHIS * f) }}, mass: 137.14, name: HIS, σ: 6.08, ε: {{ "%.4f" % eHIS }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: {{ "%.2f" % (zCYS * f) }}, mass: 103.14, name: CYS, σ: 5.48, ε: {{ "%.4f" % eCYS }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: 0.0, mass: 114.1,  name: ASN, σ: 5.68, ε: {{ "%.4f" % eASN }}}
-  - {charge: 0.0, mass: 128.13, name: GLN, σ: 6.02, ε: {{ "%.4f" % eGLN }}}
-  - {charge: 0.0, mass: 87.08,  name: SER, σ: 5.18, ε: {{ "%.4f" % eSER }}}
-  - {charge: 0.0, mass: 57.05,  name: GLY, σ: 4.5,  ε: {{ "%.4f" % eGLY }}}
-  - {charge: 0.0, mass: 101.11, name: THR, σ: 5.62, ε: {{ "%.4f" % eTHR }}}
-  - {charge: 0.0, mass: 71.07,  name: ALA, σ: 5.04, ε: {{ "%.4f" % eALA_3 }}}
-  - {charge: 0.0, mass: 131.2,  name: MET, σ: 6.18, ε: {{ "%.4f" % eMET }}}
-  - {charge: 0.0, mass: 163.18, name: TYR, σ: 6.46, ε: {{ "%.4f" % eTYR }}}
-  - {charge: 0.0, mass: 99.13,  name: VAL, σ: 5.86, ε: {{ "%.4f" % eVAL }}}
-  - {charge: 0.0, mass: 186.22, name: TRP, σ: 6.78, ε: {{ "%.4f" % eTRP }}}
-  - {charge: 0.0, mass: 113.16, name: LEU, σ: 6.18, ε: {{ "%.4f" % eLEU }}}
-  - {charge: 0.0, mass: 113.16, name: ILE, σ: 6.18, ε: {{ "%.4f" % eILE }}}
-  - {charge: 0.0, mass: 97.12,  name: PRO, σ: 5.56, ε: {{ "%.4f" % ePRO }}}
-  - {charge: 0.0, mass: 147.18, name: PHE, σ: 6.36, ε: {{ "%.4f" % ePHE }}}
-  - {charge: 0.0, mass: 103.14, name: CSS, σ: 5.48, ε: {{ "%.4f" % eCYS }}}
+  - {charge: {{ "%.2f" % (zARG * f) }}, mass: 156.19, name: ARG, σ: 6.56, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zASP * f) }}, mass: 115.09, name: ASP, σ: 5.58, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zGLU * f) }}, mass: 129.11, name: GLU, σ: 5.92, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zLYS * f) }}, mass: 128.17, name: LYS, σ: 6.36, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zHIS * f) }}, mass: 137.14, name: HIS, σ: 6.08, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zCYS * f) }}, mass: 103.14, name: CYS, σ: 5.48, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: 0.0, mass: 114.1,  name: ASN, σ: 5.68, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, mass: 128.13, name: GLN, σ: 6.02, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, mass: 87.08,  name: SER, σ: 5.18, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, mass: 57.05,  name: GLY, σ: 4.5,  ε: {{ "%.4f" % eT }}}
+  - {charge: 0.0, mass: 101.11, name: THR, σ: 5.62, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, mass: 71.07,  name: ALA, σ: 5.04, ε: {{ "%.4f" % eT }}}
+  - {charge: 0.0, mass: 131.2,  name: MET, σ: 6.18, ε: {{ "%.4f" % eT }}}
+  - {charge: 0.0, mass: 163.18, name: TYR, σ: 6.46, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, mass: 99.13,  name: VAL, σ: 5.86, ε: {{ "%.4f" % eT }}}
+  - {charge: 0.0, mass: 186.22, name: TRP, σ: 6.78, ε: {{ "%.4f" % eT }}}
+  - {charge: 0.0, mass: 113.16, name: LEU, σ: 6.18, ε: {{ "%.4f" % eT }}}
+  - {charge: 0.0, mass: 113.16, name: ILE, σ: 6.18, ε: {{ "%.4f" % eT }}}
+  - {charge: 0.0, mass: 97.12,  name: PRO, σ: 5.56, ε: {{ "%.4f" % eT }}}
+  - {charge: 0.0, mass: 147.18, name: PHE, σ: 6.36, ε: {{ "%.4f" % eT }}}
+  - {charge: 0.0, mass: 103.14, name: CSS, σ: 5.48, ε: {{ "%.4f" % ec }}}
 
 system:
   energy:
