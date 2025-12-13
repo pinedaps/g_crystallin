@@ -134,7 +134,7 @@ def plot_potential(epsilon_c=0.8368, T_c=293, depsilon_dT=0.02522, r_cutoff=2.5,
     anchored_box.patch.set_edgecolor("black")
     anchored_box.txt._text.set_ha("center")
     ax.add_artist(anchored_box)
-    plt.savefig('./tmp_fig/AH_potential.png')
+    plt.savefig('./AH_potential.png')
 
 
 # ------------------------------
