@@ -30,21 +30,14 @@ Temperature input options (choose one):
         Pdb path
 
 Other options:
-  --outdir <path>     Output directory (default: ./T_analysis_out)  
+  --outdir <path>     Output directory (default: ./<input_pdb>)  
   -h, --help          Show this help message
 
 Example:
-  $0 --pH 7.1 --tmin 280 --tmax 320 --tstep 10 --pdb ../raw_data/1AMM
-  $0 --pH 7.1 --temps 290,300,310 --pdb ../raw_data/1AMM
+  $0 --pH 7.1 --tmin 280 --tmax 320 --tstep 10 --pdb pdbs/XXXX --outdir XXXX
+  $0 --pH 7.1 --temps 290,300,310 --pdb pdbs/XXXX --outdir XXXX
 EOF
 }
-
-#######################################
-# Default values
-#######################################
-
-OUTDIR="./T_analysis_out"
-T_ARRAY=()
 
 #######################################
 # Parse arguments
@@ -95,6 +88,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 #######################################
+# Default values
+#######################################
+
+FILE="${PDB##*/}"
+OUTDIR="./$FILE"
+T_ARRAY=()
+
+#######################################
 # Build temperature array
 #######################################
 
@@ -142,7 +143,7 @@ for T in "${T_ARRAY[@]}"; do
     TOPO_OUT="${TOPO_DIR}/topology_${FILE}_T${T}.yaml"
     echo "  Running topology for pdb = $FILE at T = $T → $TOPO_OUT"
 
-    python3 pdb2xyz/__init__2.py \
+    python3 pdb2xyz/__init__AH_Hakan.py \
         -i "$PDB" \
 	-o "$XYZ_OUT" \
 	-t "$TOPO_OUT" \

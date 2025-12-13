@@ -14,19 +14,25 @@ cmn
 ######################################### Acquiring path ########################################
 
 parser = argparse.ArgumentParser(description='Configuration of data source')
-parser.add_argument('path', metavar='Path', type=str, nargs='?',
-                    help='path where data is stored')
-parser.add_argument('sigma', metavar='Sigma', type=float, nargs='?',
-                    help='radius of the protein in Angtroms')
+parser.add_argument('-p', '--path', type=str, 
+                    help='path where the computed data is stored')
+parser.add_argument('-pe', '--path_exp', type=str,
+                    help='path where the experimental data is stored')
+parser.add_argument('-s', '--sigma', type=float,
+                    help='radius of the protein in Angtroms (default= 10 A)')
 args = parser.parse_args()
 
 data_dir = args.path
 plot_dir = args.path.replace('scans','plots')
-exp_dir  = args.path.replace('scans','experiments')
+exp_dir  = args.path_exp
 
 # Calculation of the B2 for a hard sphere of radius 'sigma'
 
-sigma = args.sigma
+if args.sigma:
+	sigma = args.sigma
+else:
+	sigma = 10
+	print('Protein radius not provided, a default radius of 1 nm was used!')
 B2_HS = 2/3*np.pi*sigma**3
 print('B2_HS = ' +str(B2_HS))
 
