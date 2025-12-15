@@ -156,7 +156,7 @@ for E in "${E_ARRAY[@]}"; do
 	-t "$TOPO_OUT" \
 	--pH "$PH" \
         --T "$T" \
-        --epslion "$E"
+        --epsilon "$E"
 done
 
 echo "Topology generation complete."
@@ -189,15 +189,5 @@ done
 echo "Duello scans complete."
 echo
 
-#######################################
-# Step 3: Plot results
-#######################################
-
-echo "=== Plotting results ==="
-
-python3 plot_scripts/plot_potential.py "${SCAN_DIR}/"
-
-echo "Plots generated in: $PLOT_DIR"
-echo
 echo "=== Done! ==="
 

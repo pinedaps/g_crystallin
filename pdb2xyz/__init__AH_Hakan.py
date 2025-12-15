@@ -55,6 +55,13 @@ def parse_args():
         default=293,
     )
     parser.add_argument(
+        "--epsilon",
+        type=float,
+        required=False,
+        help="Epsilon at 293 K (default: 0.8368)",
+        default=0.8368,
+    )
+    parser.add_argument(
         "--sidechains",
         action="store_true",
         help="Off-center ionizable sidechains (default: disabled)",
@@ -187,7 +194,8 @@ def main():
         "pH": args.pH,
         "alpha": args.alpha,
         "sidechains": args.sidechains,
-	"T":args.T,
+	"T": args.T,
+	"ec": args.epsilon,
     }
     write_topology(args.top, context)
 
@@ -220,7 +228,6 @@ def calvados_template():
 {%- set zLYS = 1 - 10**(pH-10.68) / (1 + 10**(pH-10.68)) -%}
 {%- set zARG = 1 - 10**(pH-12.5) / (1 + 10**(pH-12.5)) -%}
 
-{%- set ec = 0.8368 -%}
 {%- set Tc = 293 -%}
 {%- set c  = 2.52e-2 -%}
 {%- set eT = (ec / Tc) * (T - (c / 2) * (T - Tc)**2) -%} 
@@ -228,6 +235,7 @@ def calvados_template():
 
 comment: "Calvados 3 coarse grained amino acid model for use with Duello / Faunus"
 
+epsilon_c: {{ ec  }}
 pH: {{ pH }}
 T:  {{ T }}
 sidechains: {{ sidechains }}

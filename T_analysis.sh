@@ -187,7 +187,7 @@ echo
 
 echo "=== Plotting results ==="
 
-python3 plot_scripts/plot_potential.py "${SCAN_DIR}/"
+python3 plot_scripts/plot_potential.py -p "${SCAN_DIR}/" -pe "./experiments/" -s 18
 
 echo "Plots generated in: $PLOT_DIR"
 echo
