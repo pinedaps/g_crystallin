@@ -18,10 +18,9 @@
 ##SBATCH --mail-user=sebastian.pineda_pineda@chem.lu.se
 ##SBATCH --mail-type=END # other optinal types:BEGIN,END,FAIL,REQUEUE,ALL
 
+module purge
 module add foss/2022b
 module load GCC/12.3.0
-module load CUDA-Python/12.1.0-CUDA-12.1.1
-module add tbb/2021.10.0
 
 source ~/duello_env/bin/activate
 
