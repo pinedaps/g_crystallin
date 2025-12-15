@@ -97,8 +97,9 @@ done
 # Default values
 #######################################
 
+WD="$(pwd)"
 FILE="${PDB##*/}"
-OUTDIR="./$FILE"
+OUTDIR="$FILE"
 E_ARRAY=()
 
 #######################################
@@ -124,14 +125,9 @@ fi
 #########################################
 
 mkdir -p "$OUTDIR"
-TOPO_DIR="$OUTDIR/topologies"
-SCAN_DIR="$OUTDIR/scans"
-PLOT_DIR="$OUTDIR/plots"
-
-mkdir -p "$TOPO_DIR" "$SCAN_DIR" "$PLOT_DIR"
 
 FILE="${PDB##*/}"
-XYZ_OUT="${OUTDIR}/${FILE}.xyz"
+XYZ_OUT="${WD}/${OUTDIR}/${FILE}.xyz"
 
 echo "pH: $PH"
 echo "T: $T"
@@ -144,33 +140,39 @@ echo
 # Step 1: Generate topology files
 #######################################
 
-echo "=== Generating topology files ==="
-
 for E in "${E_ARRAY[@]}"; do
-    TOPO_OUT="${TOPO_DIR}/topology_${FILE}_epsilon${E}.yaml"
+    echo "=== Generating topology file ==="
+    echo 
+    E_DIR="$OUTDIR/epsilon_$E"
+    mkdir -p "$E_DIR"
+    cd "$E_DIR"
+    TOPO_OUT="topology_${FILE}_epsilon${E}.yaml"
     echo "  Running topology for pdb = $FILE at epsilon = $E → $TOPO_OUT"
-
-    python3 pdb2xyz/__init__AH_Hakan.py \
-        -i "$PDB" \
+    
+    python3 ${WD}/pdb2xyz/__init__AH_Hakan.py \
+        -i "${WD}/$PDB" \
 	-o "$XYZ_OUT" \
 	-t "$TOPO_OUT" \
 	--pH "$PH" \
         --T "$T" \
         --epsilon "$E"
-done
+    cd $WD
 
-echo "Topology generation complete."
-echo
+    echo "Topology generation complete."
+    echo
+done
 
 #######################################
 # Step 2: Run duello scan
 #######################################
 
-echo "=== Running duello scan ==="
-
 for E in "${E_ARRAY[@]}"; do
-    TOPO_IN="${TOPO_DIR}/topology_${FILE}_epsilon${E}.yaml"
-    SCAN_OUT="${SCAN_DIR}/scan_epsilon${E}.dat"
+    echo "=== Running duello scan ==="
+    echo
+    E_DIR="$OUTDIR/epsilon_$E"
+    cd "$E_DIR"
+    TOPO_IN="topology_${FILE}_epsilon${E}.yaml"
+    SCAN_OUT="scan_epsilon${E}.dat"
     echo "  duello scan for epsilon = $E → $SCAN_OUT"
     
     duello scan --mol1 "$XYZ_OUT" \
@@ -184,10 +186,11 @@ for E in "${E_ARRAY[@]}"; do
 		--molarity 0.115  \
 		--temperature "$T" \
 		--pmf "$SCAN_OUT"
-done
+    cd $WD
 
-echo "Duello scans complete."
-echo
+    echo "Duello scans complete."
+    echo
+done
 
 echo "=== Done! ==="
 
