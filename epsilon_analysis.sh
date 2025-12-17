@@ -98,7 +98,7 @@ done
 #######################################
 
 FILE="${PDB##*/}"
-OUTDIR="$FILE"
+OUTDIR="${FILE}_res_0.28_dr_0.05"
 E_ARRAY=()
 
 #######################################
@@ -124,14 +124,12 @@ fi
 #########################################
 
 mkdir -p "$OUTDIR"
+XYZ_OUT="${OUTDIR}/${FILE}.xyz"
 TOPO_DIR="$OUTDIR/topologies"
 SCAN_DIR="$OUTDIR/scans"
 PLOT_DIR="$OUTDIR/plots"
 
 mkdir -p "$TOPO_DIR" "$SCAN_DIR" "$PLOT_DIR"
-
-FILE="${PDB##*/}"
-XYZ_OUT="${OUTDIR}/${FILE}.xyz"
 
 echo "pH: $PH"
 echo "T: $T"
@@ -179,8 +177,8 @@ for E in "${E_ARRAY[@]}"; do
                 --mol2 "$XYZ_OUT" \
                 --rmin 23 \
                 --rmax 80 \
-                --dr 0.5 \
-		--resolution 0.7 \
+                --dr 0.05 \
+		--resolution 0.28 \
 		--cutoff 1000  \
                 --top "$TOPO_IN"  \
 		--molarity 0.115  \
