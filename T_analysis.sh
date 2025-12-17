@@ -124,14 +124,12 @@ fi
 #########################################
 
 mkdir -p "$OUTDIR"
+XYZ_OUT="${OUTDIR}/${FILE}"
 TOPO_DIR="$OUTDIR/topologies"
 SCAN_DIR="$OUTDIR/scans"
 PLOT_DIR="$OUTDIR/plots"
 
 mkdir -p "$TOPO_DIR" "$SCAN_DIR" "$PLOT_DIR"
-
-FILE="${PDB##*/}"
-XYZ_OUT="${OUTDIR}/${FILE}.xyz"
 
 echo "pH: $PH"
 echo "epsilon_c: $EC"
