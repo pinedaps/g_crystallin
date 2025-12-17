@@ -22,6 +22,8 @@ Usage: $0 [OPTIONS]
 Temperature input options (choose one):
   --pH <value>
 	Provide a pH value
+  --epsilon <value>
+        Provide the reference epsilon for the LJ potential at 293 K
   --tmin <value> --tmax <value> --tstep <value>
         Generate a temperature array from min to max with given step.
   --temps <comma-separated list>
@@ -34,8 +36,8 @@ Other options:
   -h, --help          Show this help message
 
 Example:
-  $0 --pH 7.1 --tmin 280 --tmax 320 --tstep 10 --pdb pdbs/XXXX --outdir XXXX
-  $0 --pH 7.1 --temps 290,300,310 --pdb pdbs/XXXX --outdir XXXX
+  $0 --pH 7.1 --epsilon 0.6306 --tmin 280 --tmax 320 --tstep 10 --pdb pdbs/XXXX --outdir XXXX
+  $0 --pH 7.1 --epsilon 0.6306 --temps 290,300,310 --pdb pdbs/XXXX --outdir XXXX
 EOF
 }
 
@@ -65,6 +67,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --pH)
             PH="$2"
+            shift 2
+            ;;
+	--epsilon)
+            EC="$2"
             shift 2
             ;;
         --pdb)
@@ -128,6 +134,7 @@ FILE="${PDB##*/}"
 XYZ_OUT="${OUTDIR}/${FILE}.xyz"
 
 echo "pH: $PH"
+echo "epsilon_c: $EC"
 echo "Temperatures: ${T_ARRAY[*]}"
 echo "Output directory: $OUTDIR"
 echo "$XYZ_OUT"
@@ -148,7 +155,8 @@ for T in "${T_ARRAY[@]}"; do
 	-o "$XYZ_OUT" \
 	-t "$TOPO_OUT" \
 	--pH "$PH" \
-        --T "$T"
+        --T "$T"  \
+	--epsilon "$EC"
 done
 
 echo "Topology generation complete."
