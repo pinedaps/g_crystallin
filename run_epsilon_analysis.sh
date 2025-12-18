@@ -5,7 +5,7 @@
 
 # Job name and output files
 
-#SBATCH -J pdb_T_temp
+#SBATCH -J 1AMM_epsilon_analysis
 #SBATCH -o %x_%j.out
 #SBATCH -e %x_%j.err
 
