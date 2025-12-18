@@ -98,13 +98,15 @@ done
 #######################################
 
 FILE="${PDB##*/}"
-OUTDIR="./$FILE"
-T_ARRAY=()
+OUTDIR="${OUTDIR:-$FILE}"
+
+echo "The output directory is $OUTDIR"
 
 #######################################
 # Build temperature array
 #######################################
 
+T_ARRAY=()
 if [[ -n "${USER_TEMPS:-}" ]]; then
     IFS=',' read -ra T_ARRAY <<< "$USER_TEMPS"
 elif [[ -n "${TMIN:-}" && -n "${TMAX:-}" && -n "${TSTEP:-}" ]]; then
