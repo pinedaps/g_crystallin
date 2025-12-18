@@ -177,8 +177,8 @@ for T in "${T_ARRAY[@]}"; do
                 --mol2 "$XYZ_OUT" \
                 --rmin 23 \
                 --rmax 80 \
-                --dr 0.5 \
-		--resolution 0.7 \
+                --dr 0.1 \
+		--resolution 0.28 \
 		--cutoff 1000  \
                 --top "$TOPO_IN"  \
 		--molarity 0.115  \
