@@ -98,13 +98,15 @@ done
 #######################################
 
 FILE="${PDB##*/}"
-OUTDIR="${FILE}_res_0.28_dr_0.05"
-E_ARRAY=()
+OUTDIR="${OUTDIR:-$FILE}"
+
+echo "The output directory is $OUTDIR"
 
 #######################################
 # Build epsilon array
 #######################################
 
+E_ARRAY=()
 if [[ -n "${USER_ES:-}" ]]; then
     IFS=',' read -ra E_ARRAY <<< "$USER_ES"
 elif [[ -n "${EMIN:-}" && -n "${EMAX:-}" && -n "${ESTEP:-}" ]]; then
@@ -124,7 +126,7 @@ fi
 #########################################
 
 mkdir -p "$OUTDIR"
-XYZ_OUT="${OUTDIR}/${FILE}.xyz"
+XYZ_OUT="${OUTDIR}/${FILE}"
 TOPO_DIR="$OUTDIR/topologies"
 SCAN_DIR="$OUTDIR/scans"
 PLOT_DIR="$OUTDIR/plots"
@@ -177,7 +179,7 @@ for E in "${E_ARRAY[@]}"; do
                 --mol2 "$XYZ_OUT" \
                 --rmin 23 \
                 --rmax 80 \
-                --dr 0.05 \
+                --dr 0.1 \
 		--resolution 0.28 \
 		--cutoff 1000  \
                 --top "$TOPO_IN"  \
