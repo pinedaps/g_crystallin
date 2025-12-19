@@ -1,0 +1,127 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) SoftwareTree/Milan
+
+Inactive Modules:
+  1) FFTW.MPI/3.3.10     5) PMIx/4.2.2             9) hwloc/2.8.0
+  2) FlexiBLAS/3.2.1     6) ScaLAPACK/2.2.0-fb    10) libfabric/1.16.1
+  3) OpenBLAS/0.3.21     7) UCC/1.1.0             11) libxml2/2.10.3
+  4) OpenMPI/4.1.4       8) UCX/1.13.1
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) FFTW/3.3.10     3) libevent/2.1.12       5) numactl/2.0.16
+  2) XZ/5.2.7        4) libpciaccess/0.17
+
+The following have been reloaded with a version change:
+  1) GCC/12.2.0 => GCC/12.3.0             3) binutils/2.39 => binutils/2.40
+  2) GCCcore/12.2.0 => GCCcore/12.3.0     4) zlib/1.2.12 => zlib/1.2.13
+
+INFO:root:Adding N-terminal bead
+INFO:root:Adding C-terminal bead
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo with 176 residues.
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo_SASA with 176 residues.
+INFO:root:Topology written to 1AMM_epsilon_0.6281_res_0.28_dr_0.1/topologies/topology_1AMM_wo_T288.yaml
+INFO:root:Adding N-terminal bead
+INFO:root:Adding C-terminal bead
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo with 176 residues.
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo_SASA with 176 residues.
+INFO:root:Topology written to 1AMM_epsilon_0.6281_res_0.28_dr_0.1/topologies/topology_1AMM_wo_T293.yaml
+INFO:root:Adding N-terminal bead
+INFO:root:Adding C-terminal bead
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo with 176 residues.
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo_SASA with 176 residues.
+INFO:root:Topology written to 1AMM_epsilon_0.6281_res_0.28_dr_0.1/topologies/topology_1AMM_wo_T298.yaml
+INFO:root:Adding N-terminal bead
+INFO:root:Adding C-terminal bead
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo with 176 residues.
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo_SASA with 176 residues.
+INFO:root:Topology written to 1AMM_epsilon_0.6281_res_0.28_dr_0.1/topologies/topology_1AMM_wo_T303.yaml
+INFO:root:Adding N-terminal bead
+INFO:root:Adding C-terminal bead
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo with 176 residues.
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo_SASA with 176 residues.
+INFO:root:Topology written to 1AMM_epsilon_0.6281_res_0.28_dr_0.1/topologies/topology_1AMM_wo_T308.yaml
+INFO:root:Adding N-terminal bead
+INFO:root:Adding C-terminal bead
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo with 176 residues.
+INFO:root:Converted pdbs/1AMM_wo -> 1AMM_epsilon_0.6281_res_0.28_dr_0.1/1AMM_wo_SASA with 176 residues.
+INFO:root:Topology written to 1AMM_epsilon_0.6281_res_0.28_dr_0.1/topologies/topology_1AMM_wo_T313.yaml
+ INFO  duello::energy > Adding Coulomb potential to nonbonded matrix
+ INFO  duello         > Medium: 𝑇 = 288.00 K, εᵣ = 82.16, λᴮ = 7.06 Å, 𝐼 = 115.00 mM, λᴰ = 9.02 Å, 0.12 M 🧂Salt = NaCl
+ INFO  duello         > Molecular net-charges:    [6.84e, 6.84e]
+ INFO  duello         > Molecular dipole moments: [281.57 D, 281.57 D]
+ INFO  duello         > Molecular masses (g/mol): [20947.69, 20947.69]
+ INFO  duello         > COM range: [23.0, 80.0) in 0.1 Å steps 🐾
+ INFO  duello::icotable > Actual angle resolution = 0.28 radians
+ INFO  duello::icoscan  > 6D table: 𝑅(570) x 𝜔(23) x 𝜃𝜑(162) x 𝜃𝜑(162) = 344058840 poses 💃🕺 (71.4 MB)
+ INFO  duello::report   > Second virial coefficient, 𝐵₂ = -25439.84 Å³
+ INFO  duello::report   >                               = -3.49e-5 mol⋅ml/g²
+ INFO  duello::report   > Reduced second virial coefficient, 𝐵₂ / 𝐵₂hs = -1.00 using σ = 23.00 Å
+ INFO  duello::report   > Dissociation constant, 𝐾𝑑 = 1.63e-2 mol/l using σ = 23.00 Å
+ INFO  duello::report   > Plot: [1;33mfree energy[0m and [1;31mmean energy[0m along mass center separation. In units of kT and angstroms.
+ INFO  duello::energy > Adding Coulomb potential to nonbonded matrix
+ INFO  duello         > Medium: 𝑇 = 293.00 K, εᵣ = 80.25, λᴮ = 7.11 Å, 𝐼 = 115.00 mM, λᴰ = 8.99 Å, 0.12 M 🧂Salt = NaCl
+ INFO  duello         > Molecular net-charges:    [6.84e, 6.84e]
+ INFO  duello         > Molecular dipole moments: [281.57 D, 281.57 D]
+ INFO  duello         > Molecular masses (g/mol): [20947.69, 20947.69]
+ INFO  duello         > COM range: [23.0, 80.0) in 0.1 Å steps 🐾
+ INFO  duello::icotable > Actual angle resolution = 0.28 radians
+ INFO  duello::icoscan  > 6D table: 𝑅(570) x 𝜔(23) x 𝜃𝜑(162) x 𝜃𝜑(162) = 344058840 poses 💃🕺 (71.4 MB)
+ INFO  duello::report   > Second virial coefficient, 𝐵₂ = -20341.89 Å³
+ INFO  duello::report   >                               = -2.79e-5 mol⋅ml/g²
+ INFO  duello::report   > Reduced second virial coefficient, 𝐵₂ / 𝐵₂hs = -0.80 using σ = 23.00 Å
+ INFO  duello::report   > Dissociation constant, 𝐾𝑑 = 1.81e-2 mol/l using σ = 23.00 Å
+ INFO  duello::report   > Plot: [1;33mfree energy[0m and [1;31mmean energy[0m along mass center separation. In units of kT and angstroms.
+ INFO  duello::energy > Adding Coulomb potential to nonbonded matrix
+ INFO  duello         > Medium: 𝑇 = 298.00 K, εᵣ = 78.41, λᴮ = 7.15 Å, 𝐼 = 115.00 mM, λᴰ = 8.96 Å, 0.12 M 🧂Salt = NaCl
+ INFO  duello         > Molecular net-charges:    [6.84e, 6.84e]
+ INFO  duello         > Molecular dipole moments: [281.57 D, 281.57 D]
+ INFO  duello         > Molecular masses (g/mol): [20947.69, 20947.69]
+ INFO  duello         > COM range: [23.0, 80.0) in 0.1 Å steps 🐾
+ INFO  duello::icotable > Actual angle resolution = 0.28 radians
+ INFO  duello::icoscan  > 6D table: 𝑅(570) x 𝜔(23) x 𝜃𝜑(162) x 𝜃𝜑(162) = 344058840 poses 💃🕺 (71.4 MB)
+ INFO  duello::report   > Second virial coefficient, 𝐵₂ = -15300.51 Å³
+ INFO  duello::report   >                               = -2.10e-5 mol⋅ml/g²
+ INFO  duello::report   > Reduced second virial coefficient, 𝐵₂ / 𝐵₂hs = -0.60 using σ = 23.00 Å
+ INFO  duello::report   > Dissociation constant, 𝐾𝑑 = 2.04e-2 mol/l using σ = 23.00 Å
+ INFO  duello::report   > Plot: [1;33mfree energy[0m and [1;31mmean energy[0m along mass center separation. In units of kT and angstroms.
+ INFO  duello::energy > Adding Coulomb potential to nonbonded matrix
+ INFO  duello         > Medium: 𝑇 = 303.00 K, εᵣ = 76.62, λᴮ = 7.20 Å, 𝐼 = 115.00 mM, λᴰ = 8.93 Å, 0.12 M 🧂Salt = NaCl
+ INFO  duello         > Molecular net-charges:    [6.84e, 6.84e]
+ INFO  duello         > Molecular dipole moments: [281.57 D, 281.57 D]
+ INFO  duello         > Molecular masses (g/mol): [20947.69, 20947.69]
+ INFO  duello         > COM range: [23.0, 80.0) in 0.1 Å steps 🐾
+ INFO  duello::icotable > Actual angle resolution = 0.28 radians
+ INFO  duello::icoscan  > 6D table: 𝑅(570) x 𝜔(23) x 𝜃𝜑(162) x 𝜃𝜑(162) = 344058840 poses 💃🕺 (71.4 MB)
+ INFO  duello::report   > Second virial coefficient, 𝐵₂ = -10347.50 Å³
+ INFO  duello::report   >                               = -1.42e-5 mol⋅ml/g²
+ INFO  duello::report   > Reduced second virial coefficient, 𝐵₂ / 𝐵₂hs = -0.41 using σ = 23.00 Å
+ INFO  duello::report   > Dissociation constant, 𝐾𝑑 = 2.32e-2 mol/l using σ = 23.00 Å
+ INFO  duello::report   > Plot: [1;33mfree energy[0m and [1;31mmean energy[0m along mass center separation. In units of kT and angstroms.
+ INFO  duello::energy > Adding Coulomb potential to nonbonded matrix
+ INFO  duello         > Medium: 𝑇 = 308.00 K, εᵣ = 74.88, λᴮ = 7.25 Å, 𝐼 = 115.00 mM, λᴰ = 8.90 Å, 0.12 M 🧂Salt = NaCl
+ INFO  duello         > Molecular net-charges:    [6.84e, 6.84e]
+ INFO  duello         > Molecular dipole moments: [281.57 D, 281.57 D]
+ INFO  duello         > Molecular masses (g/mol): [20947.69, 20947.69]
+ INFO  duello         > COM range: [23.0, 80.0) in 0.1 Å steps 🐾
+ INFO  duello::icotable > Actual angle resolution = 0.28 radians
+ INFO  duello::icoscan  > 6D table: 𝑅(570) x 𝜔(23) x 𝜃𝜑(162) x 𝜃𝜑(162) = 344058840 poses 💃🕺 (71.4 MB)
+ INFO  duello::report   > Second virial coefficient, 𝐵₂ = -5489.47 Å³
+ INFO  duello::report   >                               = -7.53e-6 mol⋅ml/g²
+ INFO  duello::report   > Reduced second virial coefficient, 𝐵₂ / 𝐵₂hs = -0.22 using σ = 23.00 Å
+ INFO  duello::report   > Dissociation constant, 𝐾𝑑 = 2.68e-2 mol/l using σ = 23.00 Å
+ INFO  duello::report   > Plot: [1;33mfree energy[0m and [1;31mmean energy[0m along mass center separation. In units of kT and angstroms.
+ INFO  duello::energy > Adding Coulomb potential to nonbonded matrix
+ INFO  duello         > Medium: 𝑇 = 313.00 K, εᵣ = 73.19, λᴮ = 7.29 Å, 𝐼 = 115.00 mM, λᴰ = 8.87 Å, 0.12 M 🧂Salt = NaCl
+ INFO  duello         > Molecular net-charges:    [6.84e, 6.84e]
+ INFO  duello         > Molecular dipole moments: [281.57 D, 281.57 D]
+ INFO  duello         > Molecular masses (g/mol): [20947.69, 20947.69]
+ INFO  duello         > COM range: [23.0, 80.0) in 0.1 Å steps 🐾
+ INFO  duello::icotable > Actual angle resolution = 0.28 radians
+ INFO  duello::icoscan  > 6D table: 𝑅(570) x 𝜔(23) x 𝜃𝜑(162) x 𝜃𝜑(162) = 344058840 poses 💃🕺 (71.4 MB)
+ INFO  duello::report   > Second virial coefficient, 𝐵₂ = -713.48 Å³
+ INFO  duello::report   >                               = -9.79e-7 mol⋅ml/g²
+ INFO  duello::report   > Reduced second virial coefficient, 𝐵₂ / 𝐵₂hs = -0.03 using σ = 23.00 Å
+ INFO  duello::report   > Dissociation constant, 𝐾𝑑 = 3.17e-2 mol/l using σ = 23.00 Å
+ INFO  duello::report   > Plot: [1;33mfree energy[0m and [1;31mmean energy[0m along mass center separation. In units of kT and angstroms.
