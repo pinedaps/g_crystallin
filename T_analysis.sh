@@ -36,8 +36,8 @@ Other options:
   -h, --help          Show this help message
 
 Example:
-  $0 --pH 7.1 --epsilon 0.6306 --tmin 280 --tmax 320 --tstep 10 --pdb pdbs/XXXX --outdir XXXX
-  $0 --pH 7.1 --epsilon 0.6306 --temps 290,300,310 --pdb pdbs/XXXX --outdir XXXX
+  $0 --pH 7.1 --epsilon 0.8368 --tmin 280 --tmax 320 --tstep 10 --pdb pdbs/XXXX --outdir XXXX --sasa_ratio XXXX
+  $0 --pH 7.1 --epsilon 0.8368 --temps 290,300,310 --pdb pdbs/XXXX --outdir XXXX --sasa_ratio XXXX
 EOF
 }
 
@@ -71,6 +71,10 @@ while [[ $# -gt 0 ]]; do
             ;;
 	--epsilon)
             EC="$2"
+            shift 2
+            ;;
+	--sasa_ratio)
+            SR="$2"
             shift 2
             ;;
         --pdb)
@@ -157,6 +161,7 @@ for T in "${T_ARRAY[@]}"; do
 	--pH "$PH" \
         --T "$T"  \
 	--epsilon "$EC"
+        --sasa_ratio "$SR"
 done
 
 echo "Topology generation complete."
