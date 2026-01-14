@@ -179,10 +179,10 @@ def read_ratio_sasa(filename=None):
     If filename is None:
         return default {AA: {mean=1.0, stdev=0.0, stderr=0.0}}
     """
-    AMINO_ACIDS = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY",
+    AMINO_ACIDS = ["ALA","ARG","ASN","ASP","CYS", "CSS","GLN","GLU","GLY",
                    "HIS","ILE","LEU","LYS","MET","PHE","PRO","SER",
                    "THR","TRP","TYR","VAL"]
-   
+    
     ratio_sasa = {}
 
     if filename is None:
@@ -276,9 +276,6 @@ def main():
 def calvados_template():
     return """
 
-{{ ratio_sasa["ARG"].mean }}
-
-
 {%- set f = 1.0 - sidechains -%}
 {%- set zCTR = - 10**(pH-3.16) / (1 + 10**(pH-3.16)) -%}
 {%- set zASP = - 10**(pH-3.43) / (1 + 10**(pH-3.43)) -%}
@@ -295,7 +292,7 @@ def calvados_template():
 
 comment: "Calvados 3 coarse grained amino acid model for use with Duello / Faunus"
 
-epsilon_c: {{ ec  }}
+epsilon_c: {{ ec }}
 pH: {{ pH }}
 T:  {{ T }}
 sidechains: {{ sidechains }}
@@ -311,28 +308,27 @@ atoms:
   - {charge: {{ "%.2f" % zLYS }}, hydrophobicity: !Lambda 0, mass: 0, name: Ksc, σ: 2.0, ε: {{ "%.4f" % ec }}}
   - {charge: {{ "%.2f" % zCYS }}, hydrophobicity: !Lambda 0, mass: 0, name: Csc, σ: 2.0, ε: {{ "%.4f" % ec }}}
 {%- endif %}
-  - {charge: {{ "%.2f" % (zARG * f) }}, hydrophobicity: !Lambda {{0.7407902764839954 * lT * }}, mass: 156.19, name: ARG, σ: 6.56, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: {{ "%.2f" % (zASP * f) }}, hydrophobicity: !Lambda {{0.092587557536158 * lT}},  mass: 115.09, name: ASP, σ: 5.58, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: {{ "%.2f" % (zGLU * f) }}, hydrophobicity: !Lambda {{0.000249590539426 * lT}},  mass: 129.11, name: GLU, σ: 5.92, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: {{ "%.2f" % (zLYS * f) }}, hydrophobicity: !Lambda {{0.1380602542039267 * lT}}, mass: 128.17, name: LYS, σ: 6.36, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: {{ "%.2f" % (zHIS * f) }}, hydrophobicity: !Lambda {{0.4087176216525476 * lT}}, mass: 137.14, name: HIS, σ: 6.08, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: {{ "%.2f" % (zCYS * f) }}, hydrophobicity: !Lambda {{0.5922529084601322 * lT}}, mass: 103.14, name: CYS, σ: 5.48, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.3706962163690402 * lT}}, mass: 114.1,  name: ASN, σ: 5.68, ε: {{ "%.4f" % ec }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.3143449791669133 * lT}}, mass: 128.13, name: GLN, σ: 6.02, ε: {{ "%.4f" % ec }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.4473142572693176 * lT}}, mass: 87.08,  name: SER, σ: 5.18, ε: {{ "%.4f" % ec }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.7538308115197386 * lT}}, mass: 57.05,  name: GLY, σ: 4.5,  ε: {{ "%.4f" % eT }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.2672387936544146 * lT}}, mass: 101.11, name: THR, σ: 5.62, ε: {{ "%.4f" % ec }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.3377244362031627 * lT}}, mass: 71.07,  name: ALA, σ: 5.04, ε: {{ "%.4f" % eT }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.5170874160398543 * lT}}, mass: 131.2,  name: MET, σ: 6.18, ε: {{ "%.4f" % eT }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.950628687301107 * lT}},  mass: 163.18, name: TYR, σ: 6.46, ε: {{ "%.4f" % ec }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.2936174211771383 * lT}}, mass: 99.13,  name: VAL, σ: 5.86, ε: {{ "%.4f" % eT }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{1.033450123574512 * lT}},  mass: 186.22, name: TRP, σ: 6.78, ε: {{ "%.4f" % eT }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.5548615312993875 * lT}}, mass: 113.16, name: LEU, σ: 6.18, ε: {{ "%.4f" % eT }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.5130398874425708 * lT}}, mass: 113.16, name: ILE, σ: 6.18, ε: {{ "%.4f" % eT }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.3469777523519372 * lT}}, mass: 97.12,  name: PRO, σ: 5.56, ε: {{ "%.4f" % eT }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.8906449355499866 * lT}}, mass: 147.18, name: PHE, σ: 6.36, ε: {{ "%.4f" % eT }}}
-  - {charge: 0.0, hydrophobicity: !Lambda {{0.5922529084601322 * lT}}, mass: 103.14, name: CSS, σ: 5.48, ε: {{ "%.4f" % ec }}}
-
+  - {charge: {{ "%.2f" % (zARG * f) }}, hydrophobicity: !Lambda {{0.7407902764839954 * lT * ratio_sasa["ARG"].mean }}, mass: 156.19, name: ARG, σ: 6.56, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zASP * f) }}, hydrophobicity: !Lambda {{0.092587557536158 * lT * ratio_sasa["ASP"].mean}},  mass: 115.09, name: ASP, σ: 5.58, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zGLU * f) }}, hydrophobicity: !Lambda {{0.000249590539426 * lT * ratio_sasa["GLU"].mean}},  mass: 129.11, name: GLU, σ: 5.92, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zLYS * f) }}, hydrophobicity: !Lambda {{0.1380602542039267 * lT * ratio_sasa["LYS"].mean}}, mass: 128.17, name: LYS, σ: 6.36, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zHIS * f) }}, hydrophobicity: !Lambda {{0.4087176216525476 * lT * ratio_sasa["HIS"].mean}}, mass: 137.14, name: HIS, σ: 6.08, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: {{ "%.2f" % (zCYS * f) }}, hydrophobicity: !Lambda {{0.5922529084601322 * lT * ratio_sasa["CYS"].mean}}, mass: 103.14, name: CYS, σ: 5.48, ε: {{ "%.4f" % ec }}, custom: {alpha: {{ f * alpha }}}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.3706962163690402 * lT * ratio_sasa["ASN"].mean}}, mass: 114.1,  name: ASN, σ: 5.68, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.3143449791669133 * lT * ratio_sasa["GLN"].mean}}, mass: 128.13, name: GLN, σ: 6.02, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.4473142572693176 * lT * ratio_sasa["SER"].mean}}, mass: 87.08,  name: SER, σ: 5.18, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.7538308115197386 * lT * ratio_sasa["GLY"].mean}}, mass: 57.05,  name: GLY, σ: 4.5,  ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.2672387936544146 * lT * ratio_sasa["THR"].mean}}, mass: 101.11, name: THR, σ: 5.62, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.1897587086430935 * lT * ratio_sasa["ALA"].mean}}, mass: 71.09,  name: ALA, σ: 5.12, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.5170874160398543 * lT * ratio_sasa["MET"].mean}}, mass: 131.2,  name: MET, σ: 6.18, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.950628687301107 * lT * ratio_sasa["TYR"].mean}},  mass: 163.18, name: TYR, σ: 6.46, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.2936174211771383 * lT * ratio_sasa["VAL"].mean}}, mass: 99.13,  name: VAL, σ: 5.86, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{1.033450123574512 * lT * ratio_sasa["TRP"].mean}},  mass: 186.22, name: TRP, σ: 6.78, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.5548615312993875 * lT * ratio_sasa["LEU"].mean}}, mass: 113.16, name: LEU, σ: 6.18, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.5130398874425708 * lT * ratio_sasa["ILE"].mean}}, mass: 113.16, name: ILE, σ: 6.18, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.3469777523519372 * lT * ratio_sasa["PRO"].mean}}, mass: 97.12,  name: PRO, σ: 5.56, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.8906449355499866 * lT * ratio_sasa["PHE"].mean}}, mass: 147.18, name: PHE, σ: 6.36, ε: {{ "%.4f" % ec }}}
+  - {charge: 0.0, hydrophobicity: !Lambda {{0.5922529084601322 * lT * ratio_sasa["CSS"].mean}}, mass: 103.14, name: CSS, σ: 5.48, ε: {{ "%.4f" % ec }}}
 system:
   energy:
     nonbonded:
