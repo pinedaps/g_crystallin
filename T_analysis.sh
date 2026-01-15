@@ -153,7 +153,7 @@ for T in "${T_ARRAY[@]}"; do
     TOPO_OUT="${TOPO_DIR}/topology_${FILE}_T${T}.yaml"
     echo "  Running topology for pdb = $FILE at T = $T → $TOPO_OUT"
 
-    if [[ -n "$SR" ]] then
+    if [[ -n "$SR" ]]; then
         echo "SASA ratio file is: $SR"
         python3 pdb2xyz/__init__AH_Hakan_Lambda.py \
             -i "$PDB" \

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Walltime HH:MM:SS
-#SBATCH -t 08:00:00
+#SBATCH -t 03:00:00
 
 # Job name and output files
 
@@ -24,7 +24,9 @@ module load GCC/12.3.0
 
 source ~/duello_env/bin/activate
 
-./T_analysis.sh --pH 7.1 --epsilon 0.6281 --tmin 288 --tmax 313 --tstep 5 --pdb pdbs/1AMM_wo --outdir 1AMM_epsilon_0.6281_res_0.28_dr_0.1
+#./T_analysis.sh --pH 7.1 --epsilon 0.8368 --temps 293 --pdb pdbs/1AMM --outdir 1AMM_epsilon_0.8368_res_0.28_dr_0.1_SASA --sasa_ratio sasa_rho/SASA_ratio
+
+./T_analysis.sh --pH 7.1 --epsilon 0.8368 --temps 293 --pdb pdbs/1AMM --outdir 1AMM_epsilon_0.8368_res_0.28_dr_0.1
 
 #./T_analysis.sh --pH 7.1 --epsilon 0.6281 --temps 290,300,310 --pdb pdbs/1AMM --outdir 1AMM_epsilon_0.6281_res_0.28_dr_0.1
 
