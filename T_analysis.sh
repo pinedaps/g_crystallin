@@ -103,7 +103,7 @@ done
 
 FILE="${PDB##*/}"
 OUTDIR="${OUTDIR:-$FILE}"
-
+SR="${SR:-}"
 echo "The output directory is $OUTDIR"
 
 #######################################
@@ -140,8 +140,7 @@ mkdir -p "$TOPO_DIR" "$SCAN_DIR" "$PLOT_DIR"
 echo "pH: $PH"
 echo "epsilon_c: $EC"
 echo "Temperatures: ${T_ARRAY[*]}"
-echo "Output directory: $OUTDIR"
-echo "$XYZ_OUT"
+echo "Coordinates files: $XYZ_OUT"
 echo
 
 #######################################
@@ -154,14 +153,26 @@ for T in "${T_ARRAY[@]}"; do
     TOPO_OUT="${TOPO_DIR}/topology_${FILE}_T${T}.yaml"
     echo "  Running topology for pdb = $FILE at T = $T → $TOPO_OUT"
 
-    python3 pdb2xyz/__init__AH_Hakan.py \
-        -i "$PDB" \
-	-o "$XYZ_OUT" \
-	-t "$TOPO_OUT" \
-	--pH "$PH" \
-        --T "$T"  \
-	--epsilon "$EC"
-        --sasa_ratio "$SR"
+    if [[ -n "$SR" ]] then
+        echo "SASA ratio file is: $SR"
+        python3 pdb2xyz/__init__AH_Hakan_Lambda.py \
+            -i "$PDB" \
+            -o "$XYZ_OUT" \
+            -t "$TOPO_OUT" \
+            --pH "$PH" \
+            --T "$T"  \
+            --epsilon "$EC" \
+            --sasa_ratio "$SR"
+    else
+        echo "SASA ratio for each amino acid taken as 1"
+        python3 pdb2xyz/__init__AH_Hakan_Lambda.py \
+            -i "$PDB" \
+	    -o "$XYZ_OUT" \
+	    -t "$TOPO_OUT" \
+	    --pH "$PH" \
+            --T "$T"  \
+	    --epsilon "$EC"
+    fi
 done
 
 echo "Topology generation complete."

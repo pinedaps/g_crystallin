@@ -65,7 +65,7 @@ def parse_args():
         "--sasa_ratio",
         type=str,
         required=False,
-        help="Ratio between the SASA of the protein and the IDP SASA ref (default: None)",
+        help="Path to ratios between the averaged SASA per amino acid of the protein and the reference SASA (IDPs) (default: All ratios are 1, suggesting protein SASA as in IDPs as in Calvados)",
         default=None,
     )
     parser.add_argument(
