@@ -1,0 +1,36 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) SoftwareTree/Milan
+
+Inactive Modules:
+  1) FFTW.MPI/3.3.10     5) PMIx/4.2.2             9) hwloc/2.8.0
+  2) FlexiBLAS/3.2.1     6) ScaLAPACK/2.2.0-fb    10) libfabric/1.16.1
+  3) OpenBLAS/0.3.21     7) UCC/1.1.0             11) libxml2/2.10.3
+  4) OpenMPI/4.1.4       8) UCX/1.13.1
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) FFTW/3.3.10     3) libevent/2.1.12       5) numactl/2.0.16
+  2) XZ/5.2.7        4) libpciaccess/0.17
+
+The following have been reloaded with a version change:
+  1) GCC/12.2.0 => GCC/12.3.0             3) binutils/2.39 => binutils/2.40
+  2) GCCcore/12.2.0 => GCCcore/12.3.0     4) zlib/1.2.12 => zlib/1.2.13
+
+INFO:root:Adding N-terminal bead
+INFO:root:Adding C-terminal bead
+INFO:root:Converted pdbs/1AMM -> 1AMM_epsilon_0.8368_res_0.28_dr_0.1_SASA/1AMM with 176 residues.
+INFO:root:Converted pdbs/1AMM -> 1AMM_epsilon_0.8368_res_0.28_dr_0.1_SASA/1AMM_SASA with 176 residues.
+INFO:root:Topology written to 1AMM_epsilon_0.8368_res_0.28_dr_0.1_SASA/topologies/topology_1AMM_T293.yaml
+ INFO  duello::energy > Adding Coulomb potential to nonbonded matrix
+ INFO  duello         > Medium: 𝑇 = 293.00 K, εᵣ = 80.25, λᴮ = 7.11 Å, 𝐼 = 115.00 mM, λᴰ = 8.99 Å, 0.12 M 🧂Salt = NaCl
+ INFO  duello         > Molecular net-charges:    [6.84e, 6.84e]
+ INFO  duello         > Molecular dipole moments: [281.57 D, 281.57 D]
+ INFO  duello         > Molecular masses (g/mol): [20947.73, 20947.73]
+ INFO  duello         > COM range: [23.0, 80.0) in 0.1 Å steps 🐾
+ INFO  duello::icotable > Actual angle resolution = 0.28 radians
+ INFO  duello::icoscan  > 6D table: 𝑅(570) x 𝜔(23) x 𝜃𝜑(162) x 𝜃𝜑(162) = 344058840 poses 💃🕺 (71.4 MB)
+ INFO  duello::report   > Second virial coefficient, 𝐵₂ = 41803.17 Å³
+ INFO  duello::report   >                               = 5.74e-5 mol⋅ml/g²
+ INFO  duello::report   > Reduced second virial coefficient, 𝐵₂ / 𝐵₂hs = 1.64 using σ = 23.00 Å
+ INFO  duello::report   > Plot: [1;33mfree energy[0m and [1;31mmean energy[0m along mass center separation. In units of kT and angstroms.
