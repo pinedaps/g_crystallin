@@ -11,6 +11,12 @@
 
 set -euo pipefail
 
+# Start timing
+SCRIPT_START_TIME=$(date +%s)
+SCRIPT_START_DATE=$(date)
+
+echo "Script started at: $SCRIPT_START_DATE"
+
 #######################################
 # Help message
 #######################################
@@ -216,4 +222,25 @@ python3 plot_scripts/plot_potential.py -p "${SCAN_DIR}/" -pe "./experiments/" -s
 echo "Plots generated in: $PLOT_DIR"
 echo
 echo "=== Done! ==="
+
+#######################################
+# Calculate and log execution time
+#######################################
+
+SCRIPT_END_TIME=$(date +%s)
+SCRIPT_END_DATE=$(date)
+ELAPSED=$((SCRIPT_END_TIME - SCRIPT_START_TIME))
+
+HOURS=$((ELAPSED / 3600))
+MINUTES=$(((ELAPSED % 3600) / 60))
+SECONDS=$((ELAPSED % 60))
+
+echo ""
+echo "========================================"
+echo "Execution Time Summary"
+echo "========================================"
+echo "Script started:  $SCRIPT_START_DATE"
+echo "Script ended:    $SCRIPT_END_DATE"
+echo "Total elapsed time: ${HOURS}h ${MINUTES}m ${SECONDS}s (${ELAPSED} seconds)"
+echo "========================================"
 

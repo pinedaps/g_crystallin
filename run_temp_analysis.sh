@@ -18,6 +18,48 @@
 ##SBATCH --mail-user=sebastian.pineda_pineda@chem.lu.se
 ##SBATCH --mail-type=END # other optinal types:BEGIN,END,FAIL,REQUEUE,ALL
 
+#######################################
+# Log job resources and configuration
+#######################################
+
+RESOURCE_LOG="${SLURM_JOB_NAME}_${SLURM_JOB_ID}_resources.log"
+
+{
+    echo "========================================"
+    echo "SLURM Job Information"
+    echo "========================================"
+    echo "Job ID: $SLURM_JOB_ID"
+    echo "Job Name: $SLURM_JOB_NAME"
+    echo "Job Submit Time: $(date)"
+    echo "User: $USER"
+    echo "Working Directory: $(pwd)"
+    echo ""
+    echo "========================================"
+    echo "CPU Configuration"
+    echo "========================================"
+    echo "Number of Nodes: $SLURM_NNODES"
+    echo "Tasks per Node: $SLURM_NTASKS_PER_NODE"
+    echo "Total Tasks: $SLURM_NTASKS"
+    echo "CPUs per Task: $SLURM_CPUS_PER_TASK"
+    echo "Walltime Limit: $SLURM_TIMELIMIT"
+    echo ""
+    echo "========================================"
+    echo "Node Information"
+    echo "========================================"
+    echo "Allocated Nodes: $SLURM_NODELIST"
+    echo ""
+    echo "========================================"
+    echo "Memory Configuration"
+    echo "========================================"
+    echo "Memory per Node: $SLURM_MEM_PER_NODE MB"
+    echo ""
+    echo "========================================"
+    echo "System Hardware Info"
+    echo "========================================"
+    lscpu | head -20
+    echo ""
+} | tee "$RESOURCE_LOG"
+
 module purge
 module add foss/2022b
 module load GCC/12.3.0
@@ -31,4 +73,30 @@ source ~/duello_env/bin/activate
 #./T_analysis.sh --pH 7.1 --epsilon 0.6281 --temps 290,300,310 --pdb pdbs/1AMM --outdir 1AMM_epsilon_0.6281_res_0.28_dr_0.1
 
 deactivate
+
+#######################################
+# Log final job statistics
+#######################################
+
+{
+    echo ""
+    echo "========================================"
+    echo "Job Completion Information"
+    echo "========================================"
+    echo "Job End Time: $(date)"
+    echo "Exit Status: $?"
+    echo ""
+    echo "Note: To get detailed CPU time and efficiency statistics after job completion,"
+    echo "run the following command with your job ID:"
+    echo "  seff $SLURM_JOB_ID"
+    echo ""
+    echo "This will show:"
+    echo "  - CPU Efficiency"
+    echo "  - Memory Usage"
+    echo "  - Allocated Resources"
+    echo "  - Actual Usage"
+    echo "========================================"
+} | tee -a "$RESOURCE_LOG"
+
+echo "Resource log saved to: $RESOURCE_LOG"
 
