@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-# -----------------------------
+# ----------------------------------------
 #   T_analysis_faunus.sh
 #   Temperature workflow:
 #     • Parse T inputs
 #     • Run topology generation
 #     • Run faunus
-# -----------------------------
+#     • Calculate and print execution time
+# ----------------------------------------
 
 set -euo pipefail
 
@@ -33,7 +34,7 @@ Temperature input options (choose one):
         Provide an explicit list, e.g. --temps 300,310,320
   --pH <value>
         Provide a pH value
-  --s <value>
+  --sc <value>
         Salt concentration in mol/L  
   --epsilon <value>
         Provide the reference epsilon for the LJ potential at 293 K
@@ -43,8 +44,8 @@ Other options:
   -h, --help          Show this help message
 
 Example:
-  $0 ---pdb pdbs/XXXX --tmin 280 --tmax 320 --tstep 10 -pH 7.1 --s 0.115 --epsilon 0.8368 --outdir XXXX 
-  $0 ---pdb pdbs/XXXX --temps 290,300,310 --pH 7.1 --s 0.115 --epsilon 0.8368 --outdir XXXX
+  $0 --pdb ../pdbs/XXXX --tmin 280 --tmax 320 --tstep 10 -pH 7.1 --sc 0.115 --epsilon 0.8368 --outdir XXXX 
+  $0 --pdb ../pdbs/XXXX --temps 290,300,310 --pH 7.1 --sc 0.115 --epsilon 0.8368 --outdir XXXX
 EOF
 }
 
@@ -80,7 +81,7 @@ while [[ $# -gt 0 ]]; do
             PH="$2"
             shift 2
             ;;
-	--s)
+	--sc)
             SC="$2"
             shift 2
             ;;
@@ -136,12 +137,13 @@ fi
 #########################################
 
 mkdir -p "$OUTDIR"
-XYZ_OUT="${OUTDIR}/${FILE}.xyz"
 TOPO_DIR="$OUTDIR/topologies"
-SCAN_DIR="$OUTDIR/results"
-PLOT_DIR="$OUTDIR/plots"
+DAT_DIR="$OUTDIR/results/dat"
+YAML_DIR="$OUTDIR/results/yaml"
+TRAJ_DIR="$OUTDIR/results/traj"
+XYZ_OUT="${FILE}.xyz"
 
-mkdir -p "$TOPO_DIR" "$SCAN_DIR" "$PLOT_DIR"
+mkdir -p "$TOPO_DIR" "$DAT_DIR" "$YAML_DIR" "$TRAJ_DIR"
 
 echo "pdb: $FILE"
 echo "Temperatures: ${T_ARRAY[*]}"
@@ -154,66 +156,43 @@ echo
 # Step 1: Generate topology files
 #######################################
 
-echo "=== Generating topology files ==="
 
 for T in "${T_ARRAY[@]}"; do
-    TOPO_OUT="${TOPO_DIR}/topology_${FILE}_T${T}.yaml"
+    TOPO_OUT="topology_${FILE}_T${T}.yaml"
     echo "  Running topology for pdb = $FILE at T = $T → $TOPO_OUT"
-    python3 pdb2xyz/__init__AH_Hakan_faunus.py \
+    python3 ../pdb2xyz/__init__AH_Hakan_faunus.py \
          -i "$PDB" \
          -o "$XYZ_OUT" \
          -t "$TOPO_OUT" \
 	 --T "$T"  \
          --pH "$PH" \
-         --s "$SC"  \
-         --epsilon "$EC" \
+         --sc "$SC"  \
+         --epsilon "$EC" 
+	 
+    echo "  Topology generation complete."
+
+#######################################
+# Step 2: Run Faunus
+#######################################
+
+    echo "  Faunus simulation for T = $T " 
+    echo 
+    $HOME/faunus-rs/faunus/target/release/faunus run --input "$TOPO_OUT"
+    mv "$TOPO_OUT" "$TOPO_DIR"
+    mv "output.yaml" "output_${T}.yaml"
 done
 
-echo "Topology generation complete."
+mv "$XYZ_OUT" "${XYZ_OUT}_SASA" $OUTDIR
+mv *.dat.gz "$DAT_DIR"
+mv *.yaml   "$YAML_DIR"
+mv *.xyz    "$TRAJ_DIR"
+
+echo "Faunus simulations complete."
 echo
 
-#######################################
-# Step 2: Run duello scan
-#######################################
-
-echo "=== Running duello scan ==="
-
-for T in "${T_ARRAY[@]}"; do
-    TOPO_IN="${TOPO_DIR}/topology_${FILE}_T${T}.yaml"
-    SCAN_OUT="${SCAN_DIR}/scan_T${T}.dat"
-    echo "  duello scan for T = $T → $SCAN_OUT"
-    
-    duello scan --mol1 "$XYZ_OUT" \
-                --mol2 "$XYZ_OUT" \
-                --rmin 23 \
-                --rmax 80 \
-                --dr 0.1 \
-		--resolution 0.28 \
-		--cutoff 1000  \
-                --top "$TOPO_IN"  \
-		--molarity 0.115  \
-		--temperature "$T" \
-		--pmf "$SCAN_OUT"
-done
-
-echo "Duello scans complete."
-echo
-
-#######################################
-# Step 3: Plot results
-#######################################
-
-echo "=== Plotting results ==="
-
-python3 plot_scripts/plot_potential.py -p "${SCAN_DIR}/" -pe "./experiments/" -s 18
-
-echo "Plots generated in: $PLOT_DIR"
-echo
-echo "=== Done! ==="
-
-#######################################
-# Calculate and log execution time
-#######################################
+###########################################
+# Step 3: Calculate and log execution time
+###########################################
 
 SCRIPT_END_TIME=$(date +%s)
 SCRIPT_END_DATE=$(date)
@@ -223,7 +202,6 @@ HOURS=$((ELAPSED / 3600))
 MINUTES=$(((ELAPSED % 3600) / 60))
 SECONDS=$((ELAPSED % 60))
 
-echo ""
 echo "========================================"
 echo "Execution Time Summary"
 echo "========================================"
@@ -231,4 +209,4 @@ echo "Script started:  $SCRIPT_START_DATE"
 echo "Script ended:    $SCRIPT_END_DATE"
 echo "Total elapsed time: ${HOURS}h ${MINUTES}m ${SECONDS}s (${ELAPSED} seconds)"
 echo "========================================"
-
+echo

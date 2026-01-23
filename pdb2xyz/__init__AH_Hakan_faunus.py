@@ -325,16 +325,16 @@ system:
 analysis:
 - !MassCenterDistance
   molecules: [MOL1, MOL2]
-  file: com_distance_{{ T }}_.dat.gz
+  file: com_distance_{{ T }}.dat.gz
   frequency: !Every 100
 - !Trajectory
-  file: traj_{{ T }}_.xyz
+  file: traj_{{ T }}.xyz
   frequency: !Every 100
 
 propagate:
   seed: Hardware
   criterion: Metropolis
-  repeat: 5000000
+  repeat: 10000000
   collections:
   - !Stochastic
     moves:
@@ -348,7 +348,7 @@ propagate:
       weight: 1.0
     - !TranslateMolecule
       molecule: MOL2
-      dp: 0.5
+      dp: 0.1
       weight: 1.0
       directions: !z
 
