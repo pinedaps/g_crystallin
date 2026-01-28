@@ -26,24 +26,24 @@ usage() {
 Usage: $0 [OPTIONS]
 
 Temperature input options (choose one):
-  --pH <value>
-	Provide a pH value
-  --epsilon <value>
-        Provide the reference epsilon for the LJ potential at 293 K
+  --pdb <path>        
+        Pdb path
   --tmin <value> --tmax <value> --tstep <value>
         Generate a temperature array from min to max with given step.
   --temps <comma-separated list>
         Provide an explicit list, e.g. --temps 300,310,320
-  --pdb <path>        
-        Pdb path
+  --pH <value>
+        Provide a pH value
+  --epsilon <value>
+        Provide the reference epsilon for the LJ potential at 293 K
 
 Other options:
   --outdir <path>     Output directory (default: ./<input_pdb>)  
   -h, --help          Show this help message
 
 Example:
-  $0 --pH 7.1 --epsilon 0.8368 --tmin 280 --tmax 320 --tstep 10 --pdb pdbs/XXXX --outdir XXXX
-  $0 --pH 7.1 --epsilon 0.8368 --temps 290,300,310 --pdb pdbs/XXXX --outdir XXXX
+  $0 --pdb pdbs/XXXX --tmin 280 --tmax 320 --tstep 10 --pH 7.1 --epsilon 0.8368 --outdir XXXX
+  $0 --pdb pdbs/XXXX --temps 290,300,310 --pH 7.1 --epsilon 0.8368 --outdir XXXX
 EOF
 }
 
@@ -105,7 +105,6 @@ done
 
 FILE="${PDB##*/}"
 OUTDIR="${OUTDIR:-$FILE}"
-SR="${SR:-}"
 echo "The output directory is $OUTDIR"
 
 #######################################
@@ -154,14 +153,13 @@ echo "=== Generating topology files ==="
 for T in "${T_ARRAY[@]}"; do
     TOPO_OUT="${TOPO_DIR}/topology_${FILE}_T${T}.yaml"
     echo "  Running topology for pdb = $FILE at T = $T → $TOPO_OUT"
-
     python3 pdb2xyz/__init__AH_Hakan_Lambda.py \
 	-i "$PDB" \
     	-o "$XYZ_OUT" \
     	-t "$TOPO_OUT" \
     	--pH "$PH" \
     	--T "$T"  \
-    	--epsilon "$EC" \
+    	--epsilon "$EC"
 done
 
 echo "Topology generation complete."
@@ -226,4 +224,3 @@ echo "Script started:  $SCRIPT_START_DATE"
 echo "Script ended:    $SCRIPT_END_DATE"
 echo "Total elapsed time: ${HOURS}h ${MINUTES}m ${SECONDS}s (${ELAPSED} seconds)"
 echo "========================================"
-
