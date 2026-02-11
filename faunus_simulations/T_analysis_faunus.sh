@@ -160,7 +160,7 @@ echo
 for T in "${T_ARRAY[@]}"; do
     TOPO_OUT="topology_${FILE}_T${T}.yaml"
     echo "  Running topology for pdb = $FILE at T = $T → $TOPO_OUT"
-    python3 ../pdb2xyz/__init__AH_Hakan_faunus.py \
+    python3 ../pdb2xyz/__init__AH_Hakan_Lambda_faunus.py \
          -i "$PDB" \
          -o "$XYZ_OUT" \
          -t "$TOPO_OUT" \
