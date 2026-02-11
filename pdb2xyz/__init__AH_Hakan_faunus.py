@@ -330,6 +330,14 @@ analysis:
 - !Trajectory
   file: traj_{{ T }}.xyz
   frequency: !Every 100
+- !VirtualTranslate
+  molecule: MOL2
+  dL: 0.1
+  directions: !z
+  file: "vt.dat_{{ T }}.gz"
+  temperature: {{ T }}
+  frequency: !Every 100
+
 
 propagate:
   seed: Hardware
