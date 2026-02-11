@@ -1,0 +1,21 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) SoftwareTree/Milan
+INFO:root:Adding N-terminal bead
+INFO:root:Adding C-terminal bead
+INFO:root:Converted pdbs/1AMM -> 1AMM_epsilon_0.8368_res_0.28_dr_0.1_SASA_CPU/1AMM with 176 residues.
+INFO:root:Converted pdbs/1AMM -> 1AMM_epsilon_0.8368_res_0.28_dr_0.1_SASA_CPU/1AMM_SASA with 176 residues.
+INFO:root:Topology written to 1AMM_epsilon_0.8368_res_0.28_dr_0.1_SASA_CPU/topologies/topology_1AMM_T293.yaml
+ INFO  duello::energy > Adding Coulomb potential to nonbonded matrix
+ INFO  duello         > Medium: 𝑇 = 293.00 K, εᵣ = 80.25, λᴮ = 7.11 Å, 𝐼 = 115.00 mM, λᴰ = 8.99 Å, 0.12 M 🧂Salt = NaCl
+ INFO  duello         > Molecular net-charges:    [-5.48e, -5.48e]
+ INFO  duello         > Molecular dipole moments: [378.92 D, 378.92 D]
+ INFO  duello         > Molecular masses (g/mol): [20947.73, 20947.73]
+ INFO  duello         > COM range: [23.0, 80.0) in 0.1 Å steps 🐾
+ INFO  duello::icotable > Actual angle resolution = 0.28 radians
+ INFO  duello::icoscan  > 6D table: 𝑅(570) x 𝜔(23) x 𝜃𝜑(162) x 𝜃𝜑(162) = 344058840 poses 💃🕺 (71.4 MB)
+ INFO  duello::report   > Second virial coefficient, 𝐵₂ = 128297.40 Å³
+ INFO  duello::report   >                               = 1.76e-4 mol⋅ml/g²
+ INFO  duello::report   > Reduced second virial coefficient, 𝐵₂ / 𝐵₂hs = 5.03 using σ = 23.00 Å
+ INFO  duello::report   > Plot: [1;33mfree energy[0m and [1;31mmean energy[0m along mass center separation. In units of kT and angstroms.
