@@ -183,9 +183,9 @@ for T in "${T_ARRAY[@]}"; do
 done
 
 mv "$XYZ_OUT" "${XYZ_OUT}_SASA" $OUTDIR
-mv *.dat.gz "$DAT_DIR"
-mv *.yaml   "$YAML_DIR"
-mv *.xyz    "$TRAJ_DIR"
+mv *.gz       "$DAT_DIR"
+mv *.yaml     "$YAML_DIR"
+mv *.xyz      "$TRAJ_DIR"
 
 echo "Faunus simulations complete."
 echo
