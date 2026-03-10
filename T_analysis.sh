@@ -153,7 +153,7 @@ echo "=== Generating topology files ==="
 for T in "${T_ARRAY[@]}"; do
     TOPO_OUT="${TOPO_DIR}/topology_${FILE}_T${T}.yaml"
     echo "  Running topology for pdb = $FILE at T = $T → $TOPO_OUT"
-    python3 pdb2xyz/__init__AH_Hakan_Lambda.py \
+    python3 pdb2xyz/__init__AH_Hakan_Lambda_duello_buried_aa.py \
 	-i "$PDB" \
     	-o "$XYZ_OUT" \
     	-t "$TOPO_OUT" \
