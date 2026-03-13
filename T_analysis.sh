@@ -176,17 +176,17 @@ for T in "${T_ARRAY[@]}"; do
     SCAN_OUT="${SCAN_DIR}/scan_T${T}.dat"
     echo "  duello scan for T = $T → $SCAN_OUT"
     
-    duello scan --mol1 "$XYZ_OUT" \
-                --mol2 "$XYZ_OUT" \
-                --rmin 23 \
-                --rmax 80 \
-                --dr 0.1 \
-		--resolution 0.28 \
-		--cutoff 1000  \
-                --top "$TOPO_IN"  \
-		--molarity 0.115  \
-		--temperature "$T" \
-		--pmf "$SCAN_OUT"
+     duello scan --mol1 "$XYZ_OUT" \
+                 --mol2 "$XYZ_OUT" \
+                 --rmin 23 \
+                 --rmax 80 \
+                 --dr 0.1 \
+	    	 --resolution 0.28 \
+	  	 --cutoff 100  \
+                 --top "$TOPO_IN"  \
+		 --molarity 0.115  \
+		 --temperature "$T" \
+		 --pmf "$SCAN_OUT" 
 done
 
 echo "Duello scans complete."
