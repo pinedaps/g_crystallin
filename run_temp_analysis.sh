@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Walltime HH:MM:SS
-#SBATCH -t 03:00:00
+#SBATCH -t 00:05:00
 
 # Job name and output files
 
@@ -60,10 +60,12 @@ lscpu | head -20
 echo ""
 
 module purge
+module add GCCcore/12.3.0 
+module add Python/3.11.3
 
 source ~/duello_env/bin/activate
 
-OUTDIR="1AMM_sidechains"
+OUTDIR="test"
 
 #./T_analysis.sh --pH 7.1 --epsilon 0.8368 --temps 293 --pdb pdbs/1AMM --outdir $OUTDIR 
 
