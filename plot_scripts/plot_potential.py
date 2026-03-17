@@ -12,7 +12,7 @@ import common as cmn
 
 cmn
 
-EXPORT_DPI = 200
+EXPORT_DPI = 100
 
 
 def parse_args():
@@ -70,7 +70,7 @@ def extract_temperature(name):
 
 def load_scan_columns(file_path):
     try:
-        return np.loadtxt(file_path, comments="#", usecols=(0, 2), unpack=True)
+        return np.loadtxt(file_path, comments="#", usecols=(0, 1), unpack=True)
     except ValueError:
         data = np.loadtxt(file_path, comments="#")
         if data.ndim == 1:
@@ -126,10 +126,10 @@ def plot_potentials(potential_series, plot_dir):
             alpha=0.5,
             label=entry["label"],
         )
-    ax.set_ylim(-11, 5)
+    ax.set_ylim(-2, 2)
     ax.set_xlim(23, 60)
     ax.set_xlabel(r"Distance, r [$\AA$]")
-    ax.set_ylabel(r"Potential, U(r) [$k_BT$]")
+    ax.set_ylabel(r"Free Energy, F(r) [$k_BT$]")
     ax.legend(ncol=1)
     ax.set_title("Interaction Free Energy of $\gamma$B-crystallin", pad=15)
     os.makedirs(plot_dir, exist_ok=True)

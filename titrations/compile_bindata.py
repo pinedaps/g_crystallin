@@ -10,10 +10,21 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List
 
+from pint import UnitRegistry
+
 import matplotlib
 
 matplotlib.use("Agg")  # ensure plots render without a display
 import matplotlib.pyplot as plt
+
+ureg = UnitRegistry()
+
+
+def microliters_to_liters(value: float) -> float:
+    """Convert a microliter-valued float into liters using pint."""
+
+    quantity = value * ureg.microliter
+    return quantity.to(ureg.liter).magnitude
 
 
 @dataclass
@@ -103,6 +114,37 @@ def build_rows(measurements: List[Measurement]) -> List[dict]:
     return rows
 
 
+def annotate_net_charge(
+    rows: List[dict],
+    measurements: List[Measurement],
+    initial_volume_ul: float,
+    hcl_molarity: float,
+    extra_charge: float,
+    sample_moles: float,
+) -> None:
+    """Augment each row with the solution net charge in moles."""
+
+    if not measurements:
+        return
+
+    initial_ph = measurements[0].ph
+    c_naoh = 10 ** (initial_ph - 14.0)
+    v_naoh_l = microliters_to_liters(initial_volume_ul)
+    n_znaoh = v_naoh_l * c_naoh
+
+    cumulative_vhcl_ul = 0.0
+    for row in rows:
+        cumulative_vhcl_ul += row["volume_delta"]
+        vhcl_l = microliters_to_liters(cumulative_vhcl_ul)
+        n_zhcl = vhcl_l * hcl_molarity
+
+        vt_l = microliters_to_liters(row["total_volume"])
+        n_zh = (10 ** (-row["ph"])) * vt_l
+        n_zoh = (10 ** (row["ph"] - 14.0)) * vt_l
+
+        net_charge = n_zhcl - n_znaoh + n_zh - n_zoh + (extra_charge * sample_moles)
+        row["net_charge"] = round(net_charge, 12)
+        
 def write_csv(rows: Iterable[dict], csv_path: Path) -> None:
     csv_path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
@@ -113,6 +155,7 @@ def write_csv(rows: Iterable[dict], csv_path: Path) -> None:
         "volume_delta",
         "concentration",
         "ph",
+        "net_charge",
     ]
 
     with csv_path.open("w", newline="", encoding="utf-8") as fp:
@@ -131,6 +174,7 @@ def plot_relationships(rows: List[dict], parent_name: str, output_dir: Path) -> 
         ("total_volume", "Total Volume"),
         ("volume_delta", "Delta Volume"),
         ("concentration", "Concentration"),
+        ("net_charge", "Net Charge (mol)"),
     ]
     invert_columns = {"time_seconds", "total_volume", "concentration"}
 
@@ -188,6 +232,30 @@ def main() -> None:
         dest="output_dir",
         help="Directory where the CSV and plots should be written (default: parent of data_dir)",
     )
+    parser.add_argument(
+        "--initial-volume",
+        type=float,
+        default=None,
+        help="Initial solution volume in microliters; defaults to the first measurement total_volume",
+    )
+    parser.add_argument(
+        "--hcl-molarity",
+        type=float,
+        default=0.5,
+        help="Molarity of the titrant HCl in mol/L (default: 0.5)",
+    )
+    parser.add_argument(
+        "--extra-charge",
+        type=float,
+        default=0.0,
+        help="Additional charge per mole carried by the sample (z_ext, default: 0 for blank titration)",
+    )
+    parser.add_argument(
+        "--sample-moles",
+        type=float,
+        default=0.0,
+        help="Number of moles of the sample (n_sample, default: 0 for blank titration)",
+    )
     args = parser.parse_args()
 
     data_dir = Path(args.data_dir)
@@ -203,6 +271,15 @@ def main() -> None:
     measurements.sort(key=lambda m: m.dsec)
 
     rows = build_rows(measurements)
+    initial_volume_ul = args.initial_volume if args.initial_volume is not None else measurements[0].total_volume
+    annotate_net_charge(
+        rows,
+        measurements,
+        initial_volume_ul=initial_volume_ul,
+        hcl_molarity=args.hcl_molarity,
+        extra_charge=args.extra_charge,
+        sample_moles=args.sample_moles,
+    )
     csv_path, plots_dir, parent_name = determine_output_paths(
         data_dir, first_file_timestamp, args.output_dir
     )
