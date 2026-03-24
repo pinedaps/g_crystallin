@@ -180,14 +180,16 @@ for T in "${T_ARRAY[@]}"; do
      duello scan --mol1 "$XYZ_OUT" \
                  --mol2 "$XYZ_OUT" \
                  --rmin 23 \
-                 --rmax 80 \
-                 --dr 0.1 \
-	    	 --resolution 0.28 \
+                 --rmax 60 \
+                 --dr 0.5 \
+	    	 --resolution 0.7 \
 	  	 --cutoff 100  \
                  --top "$TOPO_IN"  \
 		 --molarity 0.115  \
 		 --temperature "$T" \
-		 --pmf "$SCAN_OUT" 
+		 --pmf "$SCAN_OUT" \
+		 --backend gpu  \
+                 --grid "type=invr2,size=200,shift=false,energy_cap=50"
 done
 
 echo "Duello scans complete."
