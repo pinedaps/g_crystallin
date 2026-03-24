@@ -36,14 +36,18 @@ Temperature input options (choose one):
         Provide a pH value
   --epsilon <value>
         Provide the reference epsilon for the LJ potential at 293 K
+  --ionic_strength <value>
+        Provide the ionic strength at the provided pH in M
+  --prot_radius <value>
+        Provide the radius of the protein to calculate B2_HS in Å
 
 Other options:
   --outdir <path>     Output directory (default: ./<input_pdb>)  
   -h, --help          Show this help message
 
 Example:
-  $0 --pdb pdbs/XXXX --tmin 280 --tmax 320 --tstep 10 --pH 7.1 --epsilon 0.8368 --outdir XXXX
-  $0 --pdb pdbs/XXXX --temps 290,300,310 --pH 7.1 --epsilon 0.8368 --outdir XXXX
+  $0 --pdb pdbs/XXXX --tmin 280 --tmax 320 --tstep 10 --pH 7.1 --epsilon 0.8368 --ionic_strength 0.1 --prot_radius --outdir XXXX
+  $0 --pdb pdbs/XXXX --temps 290,300,310 --pH 7.1 --epsilon 0.8368 --ionic_strength 0.1 --prot_radius --outdir XXXX
 EOF
 }
 
@@ -79,6 +83,14 @@ while [[ $# -gt 0 ]]; do
             EC="$2"
             shift 2
             ;;
+	--ionic_strength)
+            IS="$2"
+            shift 2
+            ;;
+	--prot_radius)
+            PR="$2"
+            shift 2
+            ;;
         --pdb)
             PDB="$2"
             shift 2
@@ -105,6 +117,7 @@ done
 
 FILE="${PDB##*/}"
 OUTDIR="${OUTDIR:-$FILE}"
+FILE="${FILE%.*}"
 echo "The output directory is $OUTDIR"
 
 #######################################
@@ -131,7 +144,7 @@ fi
 #########################################
 
 mkdir -p "$OUTDIR"
-XYZ_OUT="${OUTDIR}/${FILE}"
+XYZ_OUT="${OUTDIR}/${FILE}.xyz"
 TOPO_DIR="$OUTDIR/topologies"
 SCAN_DIR="$OUTDIR/scans"
 PLOT_DIR="$OUTDIR/plots"
@@ -141,6 +154,7 @@ mkdir -p "$TOPO_DIR" "$SCAN_DIR" "$PLOT_DIR"
 echo "pH: $PH"
 echo "epsilon_c: $EC"
 echo "Temperatures: ${T_ARRAY[*]}"
+echo "Ionic strength: $IS"
 echo "Coordinates files: $XYZ_OUT"
 echo
 
@@ -153,8 +167,9 @@ echo "=== Generating topology files ==="
 for T in "${T_ARRAY[@]}"; do
     TOPO_OUT="${TOPO_DIR}/topology_${FILE}_T${T}.yaml"
     echo "  Running topology for pdb = $FILE at T = $T → $TOPO_OUT"
-    python3 pdb2xyz/__init__AH_Hakan_Lambda_duello_buried_aa.py \
-	-i "$PDB" \
+    #python3 pdb2xyz/__init__AH_Hakan_Lambda_duello_buried_aa.py \
+    python3 pdb2xyz/__init__AH_Hakan_Epsilon.py \
+        -i "$PDB" \
     	-o "$XYZ_OUT" \
     	-t "$TOPO_OUT" \
     	--pH "$PH" \
@@ -185,7 +200,7 @@ for T in "${T_ARRAY[@]}"; do
 	    	 --resolution 0.7 \
 	  	 --cutoff 100  \
                  --top "$TOPO_IN"  \
-		 --molarity 0.115  \
+		 --molarity "$IS"  \
 		 --temperature "$T" \
 		 --pmf "$SCAN_OUT" \
 		 --backend gpu  \
@@ -201,7 +216,7 @@ echo
 
 echo "=== Plotting results ==="
 
-python3 plot_scripts/plot_potential.py -p "${SCAN_DIR}/" -pe "./experiments/" -s 18
+python3 plot_scripts/plot_potential.py -p "${SCAN_DIR}/" -pe "./experiments/${OUTDIR}.dat" -s $PR
 
 echo "Plots generated in: $PLOT_DIR"
 echo

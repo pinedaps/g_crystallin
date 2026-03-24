@@ -103,7 +103,6 @@ def ssbonds(traj):
 def convert_pdb(pdb_file: str, output_xyz_file: str, use_sidechains: bool, chains=None):
     """Convert PDB to coarse grained XYZ file; one bead per amino acid"""
     traj = md.load_pdb(pdb_file, frame=0)
-    SASA, map = md.shrake_rupley(traj, probe_radius=0.15, n_sphere_points=960, mode='residue', get_mapping=True) 
     cys_with_ssbond = ssbonds(traj)
     residues = []
     for index,res in enumerate(traj.topology.residues):
@@ -137,7 +136,7 @@ def convert_pdb(pdb_file: str, output_xyz_file: str, use_sidechains: bool, chain
         else:
             name = res.name
 
-        residues.append(dict(name=name, cm=cm / mw * 10, sasa=SASA[0][index] * 100))
+        residues.append(dict(name=name, cm=cm / mw * 10))
         if use_sidechains and name != "CSS":
             side_chain = add_sidechain(traj, res)
             if side_chain is not None:
@@ -152,16 +151,6 @@ def convert_pdb(pdb_file: str, output_xyz_file: str, use_sidechains: bool, chain
             f.write(f"{i['name']} {i['cm'][0]:.3f} {i['cm'][1]:.3f} {i['cm'][2]:.3f}\n")
         logging.info(
             f"Converted {pdb_file} -> {output_xyz_file} with {len(residues)} residues."
-        )
-
-    with open(output_xyz_file+'_SASA', "w") as f:
-        f.write(
-            f"Computed using the Shrake and Rupley algorithm implemented in mdtraj using Duello pdb2xyz.py with {pdb_file} (https://github.com/mlund/pdb2xyz)\n"
-        )
-        for i in residues:
-            f.write(f"{i['name']} {i['sasa']:.3f}\n")
-        logging.info(
-            f"Converted {pdb_file} -> {output_xyz_file+'_SASA'} with {len(residues)} residues."
         )
 
 def add_sidechain(traj, res):

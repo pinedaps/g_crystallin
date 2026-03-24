@@ -29,7 +29,7 @@ def parse_args():
         "-pe",
         "--path_exp",
         type=str,
-        help="path where the experimental data is stored",
+        help="path to the experimental data file",
     )
     parser.add_argument(
         "-s",
@@ -100,15 +100,10 @@ def determine_label(dataset_label, temp, scans_in_dataset, datasets_count):
 def load_experimental_data(exp_path):
     if not exp_path:
         return None
-    directory = os.path.abspath(exp_path)
-    if not os.path.isdir(directory):
-        print(f"Experimental data directory {directory} not found; skipping experimental curve.")
+    exp_file = os.path.abspath(exp_path)
+    if not os.path.isfile(exp_file):
+        print(f"Experimental data file {exp_file} not found; skipping experimental curve.")
         return None
-    files = [name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name))]
-    if not files:
-        print(f"Experimental data directory {directory} is empty; skipping experimental curve.")
-        return None
-    exp_file = os.path.join(directory, files[0])
     print(f"Loading experimental data from {exp_file}")
     return np.loadtxt(exp_file, unpack=True)
 
