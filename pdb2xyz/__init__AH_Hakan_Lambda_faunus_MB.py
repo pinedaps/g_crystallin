@@ -297,7 +297,7 @@ system:
   blocks:
   - molecule: MOL1
     N: 50
-    insert: !RandomCOM { filename: {{ xyz_path }}, rotate: true, directions: none, offset: [0.0, 0.0, 0.0] }
+    insert: !GridCOM { rotate: true }
   energy:
     nonbonded:
       default:
@@ -307,17 +307,17 @@ system:
 analysis:
 - !Energy
   file: energy.csv.gz
-  frequency: !Every 100
+  frequency: !Every 10
 - !Energy
   file: hydrophobic_energy.csv.gz  
-  frequency: !Every 100
+  frequency: !Every 10
   selections: ["hydrophobic and molecule MOL1", "hydrophobic and molecule MOL1"]
 - !RadialDistribution
   selections: ["molecule MOL1", "molecule MOL1"]
   use_com: true
   file: rdf_com.dat.gz
   dr: 0.5
-  frequency: !Every 100
+  frequency: !Every 10
 - !Trajectory
   file: traj.xtc
   frequency: !Every 100
@@ -326,7 +326,7 @@ analysis:
 propagate:
   seed: Hardware
   criterion: Metropolis
-  repeat: 100
+  repeat: 1000
   collections:
   - !Stochastic
     moves:
@@ -337,7 +337,7 @@ propagate:
       repeat: 50 
     - !TranslateMolecule
       molecule: MOL1
-      dp: 100
+      dp: 10
       weight: 1.0
       repeat: 50
 

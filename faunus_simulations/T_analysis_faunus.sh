@@ -115,8 +115,6 @@ FILE="${FILE%.*}"
 
 echo "The output directory is $OUTDIR"
 
-cargo build --release --manifest-path "$HOME/projects/faunus-rs/faunus/Cargo.toml"
-
 #######################################
 # Build temperature array
 #######################################
@@ -183,7 +181,7 @@ for T in "${T_ARRAY[@]}"; do
 
     echo "  Faunus simulation for T = $T " 
     echo
-    $HOME/projects/faunus-rs/faunus/target/release/faunus run --input "$TOPO_OUT"
+    $HOME/projects/faunus-rs/target/release/faunus run --input "$TOPO_OUT"
     mv "$TOPO_OUT" "$TOPO_DIR"
     mv "output.yaml" "output_${T}.yaml"
 done
@@ -191,7 +189,7 @@ done
 mv *.gz       	"$DAT_DIR"
 mv $XYZ_OUT   	"$TOPO_DIR"
 mv *.yaml     	"$YAML_DIR"
-mv *.xtc	"$TRAJ_DIR"
+mv traj.*       "$TRAJ_DIR"
 
 #######################################
 # Step 3: Plot results
