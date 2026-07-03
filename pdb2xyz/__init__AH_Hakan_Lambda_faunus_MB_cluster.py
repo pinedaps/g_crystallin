@@ -351,6 +351,14 @@ propagate:
       dp: 10
       weight: 1.0
       repeat: {{ N }}
+    - !ClusterMove
+      molecule: MOL1
+      dp: 10
+      dprot: 0.5
+      threshold: 40
+      com: true
+      weight: 1.0
+      repeat: 10
 
 """
 
