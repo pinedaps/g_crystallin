@@ -71,11 +71,7 @@ module purge
 module add GCCcore/12.3.0
 module add Python/3.11.3
 
-source ~/duello_env/bin/activate
-
-"$SLURM_SUBMIT_DIR/analysis_faunus.sh" "$@"
-
-deactivate
+time "$SLURM_SUBMIT_DIR/analysis_faunus.sh" "$@"
 
 #######################################
 # Log final job statistics

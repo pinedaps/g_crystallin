@@ -121,6 +121,13 @@ def parse_args():
         help="Protein mass concentration in mg/mL used to set the box size (default: 100)",
         default=100.0,
     )
+    parser.add_argument(
+        "--repeat",
+        type=int,
+        required=False,
+        help="Number of MC sweeps in propagate (default: 25000)",
+        default=25000,
+    )
     return parser.parse_args()
 
 
@@ -263,6 +270,7 @@ def main():
         "xyz_path": args.outfile,
         "N": args.N,
         "box_length": L,
+        "repeat": args.repeat,
     }
     write_topology(args.top, context)
 
@@ -385,11 +393,21 @@ analysis:
   file: traj_final.xyz
   frequency: !End
   selection: "molecule MOL1"
+- !Multipole
+  selection: "molecule MOL1"
+  frequency: !Every 10
+- !MultipoleDistribution
+  selections: ["molecule MOL1", "molecule MOL1"]
+  file: multipole_dist.csv 
+  resolution: 0.5
+  frequency: !Every 10
+
+
 
 propagate:
   seed: Hardware
   criterion: Metropolis
-  repeat: 5
+  repeat: {{ repeat }}
   collections:
   - !Stochastic
     moves:

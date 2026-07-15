@@ -46,13 +46,14 @@ Common:
   --saltcon <value>         Salt concentration mol/L
   --N <value>               Number of protein copies (default: 300)
   --concentration <value>   Protein mass concentration in mg/mL for box sizing (default: 100)
+  --repeat <value>          MC sweeps for production; equilibration uses 10% of this (default: 25000)
   --outdir <path>           Output directory (default: basename of pdb)
   -h, --help
 
 Examples:
   $0 --pdb ../pdbs/4LZT.pdb --epsilons 0.5,0.8368,1.0 --T 298.15 --pH 7.1 --saltcon 0.115 --outdir 4LZT
   $0 --pdb ../pdbs/4LZT.pdb --tmin 280 --tmax 320 --tstep 10 --pH 7.1 --saltcon 0.115 --epsilon 0.8368 --outdir 4LZT
-  $0 --pdb ../pdbs/4LZT.pdb --epsilons 0.8368 --T 298.15 --pH 7.1 --saltcon 0.115 --N 200 --concentration 50 --outdir 4LZT
+  $0 --pdb ../pdbs/4LZT.pdb --epsilons 0.8368 --T 298.15 --pH 7.1 --saltcon 0.115 --N 200 --concentration 50 --repeat 25000 --outdir 4LZT
 EOF
 }
 
@@ -60,7 +61,7 @@ EOF
 # Parse arguments
 #######################################
 
-PDB="" PH="" SC="" OUTDIR="" N_PROT="300" CONC="100"
+PDB="" PH="" SC="" OUTDIR="" N_PROT="300" CONC="100" REPEAT="25000"
 TC="" EC=""
 EPSMIN="" EPSMAX="" EPSSTEP="" USER_EPSILONS=""
 TMIN="" TMAX="" TSTEP="" USER_TEMPS=""
@@ -73,6 +74,7 @@ while [[ $# -gt 0 ]]; do
         --outdir)        OUTDIR="$2";        shift 2 ;;
         --N)             N_PROT="$2";        shift 2 ;;
         --concentration) CONC="$2";          shift 2 ;;
+        --repeat)        REPEAT="$2";        shift 2 ;;
         --T)             TC="$2";            shift 2 ;;
         --epsilon)       EC="$2";            shift 2 ;;
         --epsilons)      USER_EPSILONS="$2"; shift 2 ;;
@@ -182,26 +184,29 @@ run_simulation() {
     local TAG="$1" VAL="$2" T="$3" EPS="$4"
     local TOPO="topology_${FILE}_${TAG}.yaml"
     local TOPO_EQUIL="topology_${FILE}_${TAG}_equil.yaml"
+    local EQUIL_REPEAT=$(( REPEAT / 10 ))
+
+    local COMMON_ARGS=(-i "$PDB" -o "${FILE}.xyz" --T "$T" --pH "$PH" --saltcon "$SC" \
+                       --epsilon "$EPS" --N "$N_PROT" --concentration "$CONC")
 
     # ---- EQUILIBRATION ----
     local EQUIL_SUBDIR="${EQUIL_OUTDIR}/${OUTDIR_BASE}_${VAL}"
     mkdir -p "$EQUIL_SUBDIR/results/"{dat,yaml,traj}
     cd "$EQUIL_SUBDIR"
 
-    echo "  [${TAG}] Generating topology"
-    python3 "$PDB2XYZ" -i "$PDB" -o "${FILE}.xyz" -t "$TOPO" \
-        --T "$T" --pH "$PH" --saltcon "$SC" --epsilon "$EPS" \
-        --N "$N_PROT" --concentration "$CONC"
+    echo "  [${TAG}] Generating equilibration topology (repeat=${EQUIL_REPEAT})"
+    python3 "$PDB2XYZ" "${COMMON_ARGS[@]}" -t "$TOPO_EQUIL" --repeat "$EQUIL_REPEAT"
 
-    sed 's/repeat: 50000/repeat: 5000/' "$TOPO" > "$TOPO_EQUIL"
+    echo "  [${TAG}] Generating production topology (repeat=${REPEAT})"
+    python3 "$PDB2XYZ" "${COMMON_ARGS[@]}" -t "$TOPO"       --repeat "$REPEAT"
 
-    echo "  [${TAG}] Equilibration (5000 repeats)"
+    echo "  [${TAG}] Equilibration (${EQUIL_REPEAT} repeats)"
     "$FAUNUS" run --input "$TOPO_EQUIL" -s state.yaml
 
-    cp "$TOPO"     "$TOPO_DIR/"
-    mv output.yaml results/yaml/
-    mv *.gz        results/dat/
-    mv traj*       results/traj/
+    cp "$TOPO_EQUIL" "$TOPO_DIR/"
+    mv output.yaml        results/yaml/
+    mv *.gz               results/dat/
+    mv traj*              results/traj/
 
     # ---- PRODUCTION ----
     local PROD_SUBDIR="${OUTDIR}/${OUTDIR_BASE}_${VAL}"
@@ -212,13 +217,14 @@ run_simulation() {
     cp state.yaml    "$PROD_SUBDIR/"
     cd "$PROD_SUBDIR"
 
-    echo "  [${TAG}] Production (50000 repeats)"
+    echo "  [${TAG}] Production (${REPEAT} repeats)"
     "$FAUNUS" run --input "$TOPO" -s state.yaml
 
-    mv "$TOPO" "$TOPO_DIR/${TOPO%.yaml}_prod.yaml"
-    mv output.yaml results/yaml/
-    mv *.gz        results/dat/
-    mv traj*       results/traj/
+    mv "$TOPO" "$TOPO_DIR/$TOPO"
+    mv output.yaml        results/yaml/
+    mv *.gz               results/dat/
+    mv multipole_dist.csv results/dat/
+    mv traj*              results/traj/
 }
 
 #######################################
