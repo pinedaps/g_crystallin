@@ -18,7 +18,7 @@ else
     PROJ_ROOT="$HOME/projects"
 fi
 FAUNUS="$PROJ_ROOT/faunus-rs/target/release/faunus"
-PDB2XYZ="$PROJ_ROOT/ppis/pdb2xyz/__init__AH_Hakan_Lambda_faunus_MB.py"
+PDB2XYZ="$PROJ_ROOT/ppis/pdb2xyz/__init__AH_Hakan_Lambda_faunus_MB_cluster.py"
 PLOT_SCRIPT="$PROJ_ROOT/ppis/faunus_simulations/plot_scripts/plot_dat.py"
 
 #######################################
@@ -41,15 +41,18 @@ Sweep mode — provide exactly one of:
     --epsilon <value>                   Reference epsilon at 293 K
 
 Common:
-  --pdb <path>       PDB file (required)
-  --pH <value>       pH
-  --saltcon <value>  Salt concentration mol/L
-  --outdir <path>    Output directory (default: basename of pdb)
+  --pdb <path>              PDB file (required)
+  --pH <value>              pH
+  --saltcon <value>         Salt concentration mol/L
+  --N <value>               Number of protein copies (default: 300)
+  --concentration <value>   Protein mass concentration in mg/mL for box sizing (default: 100)
+  --outdir <path>           Output directory (default: basename of pdb)
   -h, --help
 
 Examples:
   $0 --pdb ../pdbs/4LZT.pdb --epsilons 0.5,0.8368,1.0 --T 298.15 --pH 7.1 --saltcon 0.115 --outdir 4LZT
   $0 --pdb ../pdbs/4LZT.pdb --tmin 280 --tmax 320 --tstep 10 --pH 7.1 --saltcon 0.115 --epsilon 0.8368 --outdir 4LZT
+  $0 --pdb ../pdbs/4LZT.pdb --epsilons 0.8368 --T 298.15 --pH 7.1 --saltcon 0.115 --N 200 --concentration 50 --outdir 4LZT
 EOF
 }
 
@@ -57,29 +60,31 @@ EOF
 # Parse arguments
 #######################################
 
-PDB="" PH="" SC="" OUTDIR=""
+PDB="" PH="" SC="" OUTDIR="" N_PROT="300" CONC="100"
 TC="" EC=""
 EPSMIN="" EPSMAX="" EPSSTEP="" USER_EPSILONS=""
 TMIN="" TMAX="" TSTEP="" USER_TEMPS=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --pdb)       PDB="$2";           shift 2 ;;
-        --pH)        PH="$2";            shift 2 ;;
-        --saltcon)   SC="$2";            shift 2 ;;
-        --outdir)    OUTDIR="$2";        shift 2 ;;
-        --T)         TC="$2";            shift 2 ;;
-        --epsilon)   EC="$2";            shift 2 ;;
-        --epsilons)  USER_EPSILONS="$2"; shift 2 ;;
-        --epsmin)    EPSMIN="$2";        shift 2 ;;
-        --epsmax)    EPSMAX="$2";        shift 2 ;;
-        --epsstep)   EPSSTEP="$2";       shift 2 ;;
-        --temps)     USER_TEMPS="$2";    shift 2 ;;
-        --tmin)      TMIN="$2";          shift 2 ;;
-        --tmax)      TMAX="$2";          shift 2 ;;
-        --tstep)     TSTEP="$2";         shift 2 ;;
-        -h|--help)   usage; exit 0 ;;
-        *)           echo "Unknown argument: $1" >&2; usage; exit 1 ;;
+        --pdb)           PDB="$2";           shift 2 ;;
+        --pH)            PH="$2";            shift 2 ;;
+        --saltcon)       SC="$2";            shift 2 ;;
+        --outdir)        OUTDIR="$2";        shift 2 ;;
+        --N)             N_PROT="$2";        shift 2 ;;
+        --concentration) CONC="$2";          shift 2 ;;
+        --T)             TC="$2";            shift 2 ;;
+        --epsilon)       EC="$2";            shift 2 ;;
+        --epsilons)      USER_EPSILONS="$2"; shift 2 ;;
+        --epsmin)        EPSMIN="$2";        shift 2 ;;
+        --epsmax)        EPSMAX="$2";        shift 2 ;;
+        --epsstep)       EPSSTEP="$2";       shift 2 ;;
+        --temps)         USER_TEMPS="$2";    shift 2 ;;
+        --tmin)          TMIN="$2";          shift 2 ;;
+        --tmax)          TMAX="$2";          shift 2 ;;
+        --tstep)         TSTEP="$2";         shift 2 ;;
+        -h|--help)       usage; exit 0 ;;
+        *)               echo "Unknown argument: $1" >&2; usage; exit 1 ;;
     esac
 done
 
@@ -185,7 +190,8 @@ run_simulation() {
 
     echo "  [${TAG}] Generating topology"
     python3 "$PDB2XYZ" -i "$PDB" -o "${FILE}.xyz" -t "$TOPO" \
-        --T "$T" --pH "$PH" --saltcon "$SC" --epsilon "$EPS"
+        --T "$T" --pH "$PH" --saltcon "$SC" --epsilon "$EPS" \
+        --N "$N_PROT" --concentration "$CONC"
 
     sed 's/repeat: 50000/repeat: 5000/' "$TOPO" > "$TOPO_EQUIL"
 

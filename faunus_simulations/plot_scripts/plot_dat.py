@@ -54,6 +54,11 @@ for d in eps_dat_dirs:
     df = pd.read_csv(f'{d}/rdf_com.dat.gz', compression='gzip',
                      sep=r'\s+', comment='#', header=None, names=['r', 'g(r)']).apply(pd.to_numeric)
     ax_r.plot(df['r'], df['g(r)'], label=eps_label(d))
+    peak_idx = df['g(r)'].idxmax()
+    after_peak = df[df['r'] > df['r'][peak_idx]]
+    min_idx = after_peak['g(r)'].idxmin()
+    print("Contact peak: ", df['g(r)'][peak_idx]," at r: ", df['r'][peak_idx])
+    print("First minimum: ", df['g(r)'][min_idx], " at r: ", df['r'][min_idx])
 ax_r.set_xlabel('r')
 ax_r.set_ylabel('g(r)')
 ax_r.set_ylim(-0.1, 4)

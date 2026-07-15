@@ -296,7 +296,7 @@ molecules:
   from_structure: {{ xyz_path }}
 
 system:
-  cell: !Cuboid [417.94, 417.94, 417.94]
+  cell: !Cuboid [331.98, 331.98, 331.98]
   medium:
     permittivity: !Water
     temperature: {{ T }}
@@ -328,11 +328,11 @@ analysis:
 - !Trajectory
   file: traj.xtc
   frequency: !Every 5
-  selections: ["molecule MOL1"]
+  selection: "molecule MOL1"
 - !Trajectory
   file: traj_final.xyz
   frequency: !End
-  selections: ["molecule MOL1"]
+  selection: "molecule MOL1"
 
 propagate:
   seed: Hardware

@@ -12,6 +12,7 @@ Same options as analysis_faunus.sh. Submits to SLURM with --cpus-per-task=N.
 Examples:
   $0 --pdb ../pdbs/4LZT.pdb --epsilons 0.5,0.8368,1.0 --T 298.15 --pH 7.1 --saltcon 0.115 --outdir 4LZT
   $0 --pdb ../pdbs/4LZT.pdb --tmin 280 --tmax 320 --tstep 10 --pH 7.1 --saltcon 0.115 --epsilon 0.8368 --outdir 4LZT
+  $0 --pdb ../pdbs/4LZT.pdb --epsilons 0.8368 --T 298.15 --pH 7.1 --saltcon 0.115 --N 200 --concentration 50 --outdir 4LZT
 EOF
 }
 

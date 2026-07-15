@@ -19,6 +19,30 @@ import jinja2
 import mdtraj as md
 import logging
 
+_AVOGADRO = 6.02214076e23
+
+# Residue (CG bead) masses in Da — matches the masses in the atoms: template section.
+# These are free amino acid masses minus water (i.e. residue masses in a peptide chain).
+_BEAD_MASSES = {
+    "ARG": 156.19, "ASP": 115.09, "GLU": 129.11, "LYS": 128.17,
+    "HIS": 137.14, "CYS": 103.14, "CSS": 103.14,
+    "ASN": 114.10, "GLN": 128.13, "SER":  87.08, "GLY":  57.05,
+    "THR": 101.11, "ALA":  71.09, "MET": 131.20, "TYR": 163.18,
+    "VAL":  99.13, "TRP": 186.22, "LEU": 113.16, "ILE": 113.16,
+    "PRO":  97.12, "PHE": 147.18,
+}
+_WATER_MASS = 18.015
+
+
+def box_length_angstrom(mw_da: float, N: int, concentration_mg_mL: float) -> float:
+    """Return cubic box side length in Å for N proteins at the given mass concentration.
+
+    Derived from: c [mg/mL] = N * MW [g/mol] / (Na * V [mL]) * 1e3
+    """
+    c_g_per_mL = concentration_mg_mL * 1e-3
+    volume_mL = (N * mw_da) / (_AVOGADRO * c_g_per_mL)
+    return (volume_mL * 1e24) ** (1.0 / 3.0)  # 1 mL = 1e24 Å³
+
 def parse_args():
     """Parse command line arguments for the script."""
     parser = argparse.ArgumentParser(description="Convert PDB files to XYZ format")
@@ -90,6 +114,13 @@ def parse_args():
         help="Number of protein copies in the simulation box (default: 300)",
         default=300,
     )
+    parser.add_argument(
+        "--concentration",
+        type=float,
+        required=False,
+        help="Protein mass concentration in mg/mL used to set the box size (default: 100)",
+        default=100.0,
+    )
     return parser.parse_args()
 
 
@@ -115,10 +146,16 @@ def ssbonds(traj):
 
 
 def convert_pdb(pdb_file: str, output_xyz_file: str, use_sidechains: bool, chains=None):
-    """Convert PDB to coarse grained XYZ file; one bead per amino acid"""
+    """Convert PDB to coarse grained XYZ file; one bead per amino acid.
+
+    Returns the protein molecular weight in Da computed from the CG bead masses
+    in _BEAD_MASSES (residue masses + one water for the chain termini).
+    """
     traj = md.load_pdb(pdb_file, frame=0)
     cys_with_ssbond = ssbonds(traj)
     residues = []
+    protein_mw = 0.0
+    n_residues = 0
     for index,res in enumerate(traj.topology.residues):
         if not res.is_protein:
             continue
@@ -127,7 +164,7 @@ def convert_pdb(pdb_file: str, output_xyz_file: str, use_sidechains: bool, chain
             continue
 
         cm = [0.0, 0.0, 0.0]  # residue mass center
-        mw = 0.0  # residue weight
+        mw = 0.0  # residue weight (heavy atoms, used only for COM)
         for a in res.atoms:
             # Add N-terminal
             if res.index == 0 and a.index == 0 and a.name == "N":
@@ -151,10 +188,16 @@ def convert_pdb(pdb_file: str, output_xyz_file: str, use_sidechains: bool, chain
             name = res.name
 
         residues.append(dict(name=name, cm=cm / mw * 10))
+        protein_mw += _BEAD_MASSES.get(name, 0.0)
+        n_residues += 1
+
         if use_sidechains and name != "CSS":
             side_chain = add_sidechain(traj, res)
             if side_chain is not None:
                 residues.append(side_chain)
+
+    # _BEAD_MASSES holds residue masses (free AA - H2O); add one water for chain termini
+    protein_mw += _WATER_MASS
 
     with open(output_xyz_file, "w") as f:
         f.write(f"{len(residues)}\n")
@@ -166,6 +209,9 @@ def convert_pdb(pdb_file: str, output_xyz_file: str, use_sidechains: bool, chain
         logging.info(
             f"Converted {pdb_file} -> {output_xyz_file} with {len(residues)} residues."
         )
+
+    logging.info(f"Protein MW: {protein_mw:.1f} Da ({n_residues} residues)")
+    return protein_mw
 
 def add_sidechain(traj, res):
     """Add sidechain bead for ionizable amino acids"""
@@ -200,17 +246,23 @@ def write_topology(output_path: str, context: dict):
 def main():
     logging.basicConfig(level=logging.INFO)
     args = parse_args()
-    convert_pdb(args.infile, args.outfile, args.sidechains, args.chains)
+    mw = convert_pdb(args.infile, args.outfile, args.sidechains, args.chains)
+
+    L = box_length_angstrom(mw, args.N, args.concentration)
+    logging.info(
+        f"Box length: {L:.2f} Å  (N={args.N}, c={args.concentration} mg/mL, MW={mw:.1f} Da)"
+    )
 
     context = {
         "pH": args.pH,
         "alpha": args.alpha,
         "sidechains": args.sidechains,
-	    "T": args.T,
-	    "epsilon": args.epsilon,
+        "T": args.T,
+        "epsilon": args.epsilon,
         "saltcon": args.saltcon,
         "xyz_path": args.outfile,
         "N": args.N,
+        "box_length": L,
     }
     write_topology(args.top, context)
 
@@ -249,12 +301,12 @@ def calvados_template():
 
 comment: "Calvados 3 coarse grained amino acid model for use with Faunus"
 
-T:  {{ T }}
-pH: {{ pH }}
-salt_c: {{ saltcon }}
-epsilon: {{ epsilon }}
-sidechains: {{ sidechains }}
-xyz_path: {{ xyz_path }}
+#T:  {{ T }}
+#pH: {{ pH }}
+#salt_c: {{ saltcon }}
+#epsilon: {{ epsilon }}
+#sidechains: {{ sidechains }}
+#xyz_path: {{ xyz_path }}
 
 atoms:
   - {charge: {{ "%.2f" % zCTR }}, hydrophobicity: !Lambda 0, mass: 0, name: CTR, σ: 2.0, ε: {{ "%.4f" % epsilon }}}
@@ -296,7 +348,7 @@ molecules:
   from_structure: {{ xyz_path }}
 
 system:
-  cell: !Cuboid [417.94, 417.94, 417.94]
+  cell: !Cuboid [{{ "%.4f" % box_length }}, {{ "%.4f" % box_length }}, {{ "%.4f" % box_length }}]
   medium:
     permittivity: !Water
     temperature: {{ T }}
@@ -323,27 +375,27 @@ analysis:
   selections: ["molecule MOL1", "molecule MOL1"]
   use_com: true
   file: rdf_com.dat.gz
-  dr: 0.5
+  resolution: 0.5
   frequency: !Every 10
 - !Trajectory
   file: traj.xtc
   frequency: !Every 5
-  selections: ["molecule MOL1"]
+  selection: "molecule MOL1"
 - !Trajectory
   file: traj_final.xyz
   frequency: !End
-  selections: ["molecule MOL1"]
+  selection: "molecule MOL1"
 
 propagate:
   seed: Hardware
   criterion: Metropolis
-  repeat: 50000
+  repeat: 5
   collections:
   - !Stochastic
     moves:
     - !RotateMolecule
       molecule: MOL1
-      dp: 1
+      dprot: 1
       weight: 1.0
       repeat: {{ N }}
     - !TranslateMolecule
@@ -354,9 +406,9 @@ propagate:
     - !ClusterMove
       molecule: MOL1
       dp: 10
-      dprot: 0.5
-      threshold: 40
-      com: true
+      dprot: 1
+      threshold: 46.25
+      use_com: true
       weight: 1.0
       repeat: 10
 
