@@ -306,9 +306,9 @@ system:
     N: {{ N }}
     insert: !GridCOM { rotate: true }
   energy:
-    nonbonded:
+    - !Nonbonded
       default:
-        - !Coulomb {cutoff: 47.1}
+        - !Fanourgakis {cutoff: 47.1}
         - !AshbaughHatch {mixing: arithmetic, cutoff: 20.0}
 
 analysis:
@@ -323,7 +323,7 @@ analysis:
   selections: ["molecule MOL1", "molecule MOL1"]
   use_com: true
   file: rdf_com.dat.gz
-  dr: 0.5
+  resolution: 0.5
   frequency: !Every 10
 - !Trajectory
   file: traj.xtc
@@ -335,9 +335,9 @@ analysis:
   selection: "molecule MOL1"
 
 propagate:
-  seed: Hardware
+  seed: !Hardware
   criterion: Metropolis
-  repeat: 50000
+  steps: 50000
   collections:
   - !Stochastic
     moves:

@@ -366,9 +366,9 @@ system:
     N: {{ N }}
     insert: !GridCOM { rotate: true }
   energy:
-    nonbonded:
+    - !Nonbonded
       default:
-        - !Coulomb {cutoff: 47.1}
+        - !Fanourgakis {cutoff: 47.1}
         - !AshbaughHatch {mixing: arithmetic, cutoff: 20.0}
 
 analysis:
@@ -405,9 +405,9 @@ analysis:
 
 
 propagate:
-  seed: Hardware
+  seed: !Hardware
   criterion: Metropolis
-  repeat: {{ repeat }}
+  steps: {{ repeat }}
   collections:
   - !Stochastic
     moves:
